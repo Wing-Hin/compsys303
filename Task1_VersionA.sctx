@@ -1,0 +1,71 @@
+// =====================================================================
+//  COMPSYS 303 Assignment - Part 1, Task 1
+//  Simple Traffic Light Controller - Version A (Timed SCCharts clocks)
+
+
+//  Six phase states, one per lamp pattern of the cycle.  Each state's entry
+//  action resets the phase clock c and drives the LED word of Table 1; the
+//  outgoing transition fires when c >= Tn, so a time-out is a comparison
+//  against a clock rather than a counted event.  Five of the six transitions
+//  are immediate; the one delayed transition, RR2 -> GR, closes the cycle.
+
+// AI Use Declaration: The design and all design decisions were made by Harold and Lucas.
+// The SCChart code was written with the assistance of a generative AI tool (Claude,
+// Anthropic), then reviewed, simulated and verified by Harold and Lucas in KIELER.
+
+// =====================================================================
+@ClocksUseSD
+scchart Task1_TrafficLight_A {
+
+    // ---------- Configurability (Section 3): phase time-outs in seconds ----------
+    const float T1 = 6.0  // G-R  NS green,  EW red
+    const float T2 = 2.0  // Y-R  NS yellow, EW red
+    const float T3 = 0.5  // R-R  all red (after NS)
+    const float T4 = 6.0  // R-G  NS red,   EW green
+    const float T5 = 2.0  // R-Y  NS red,   EW yellow
+    const float T6 = 0.5  // R-R  all red (after EW)
+
+    // ---------- Table 1: lamp bits of the red LED word ----------
+    //  bit 5   bit 4   bit 3   bit 2   bit 1   bit 0
+    //  EW-R    EW-Y    EW-G    NS-R    NS-Y    NS-G
+    const int NS_G = 1, NS_Y = 2, NS_R = 4, EW_G = 8, EW_Y = 16, EW_R = 32
+
+    // ---------- Reactive interface ----------
+    output int LEDR = 33    // red LED word, bits 5..0 as in Table 1 (33 = G-R, the initial pattern)
+
+    // ---------- Time (first-class): the phase clock ----------
+    clock c = 0.0    // seconds since the current phase was entered
+
+    region Lights {
+
+        initial state GR "G-R: NS green, EW red" {
+            entry do c = 0.0; LEDR = EW_R + NS_G  // 33
+        }
+        immediate if c >= T1 go to YR
+
+        state YR "Y-R: NS yellow, EW red" {
+            entry do c = 0.0; LEDR = EW_R + NS_Y   // 34
+        }
+        immediate if c >= T2 go to RR1
+
+        state RR1 "R-R: all red" {
+            entry do c = 0.0; LEDR = EW_R + NS_R    // 36
+        }
+        immediate if c >= T3 go to RG
+
+        state RG "R-G: NS red, EW green" {
+            entry do c = 0.0; LEDR = EW_G + NS_R    // 12
+        }
+        immediate if c >= T4 go to RY
+
+        state RY "R-Y: NS red, EW yellow" {
+            entry do c = 0.0; LEDR = EW_Y + NS_R   // 20
+        }
+        immediate if c >= T5 go to RR2
+
+        state RR2 "R-R: all red" {
+            entry do c = 0.0; LEDR = EW_R + NS_R   // 36
+        }
+        if c >= T6 go to GR     // the ONE delayed transition: closes the cycle
+    }
+}

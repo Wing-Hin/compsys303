@@ -1,0 +1,244 @@
+// COMPSYS 303 - Version A, Tasks 1, 2 and 3.
+// task: 1 = basic, 2 = pedestrians, 3 = pedestrians + configuration.
+// All mode changes and timing commits occur with LEDR = 36 (all red).
+// Time unit: seconds; supply deltaT in seconds in the simulator.
+// Configuration: ASCII character sequence on configChar, configValid per tick.
+// Send only when configReady was true after the previous tick. LF ends a
+// packet; CR is ignored. See TASK3.md for the protocol and simulation cases.
+//
+// AI-use provenance: the original Part 1 files declare Claude assistance.
+
+@ClocksUseSD
+scchart TrafficLight_A {
+
+    // ---------- Configurability (Section 3): time-outs in seconds ----------
+    const float T1 = 6.0    // G-R  NS green,  EW red
+    const float T2 = 2.0    // Y-R  NS yellow, EW red
+    const float T3 = 0.5    // R-R  all red (after NS)
+    const float T4 = 6.0    // R-G  NS red,   EW green
+    const float T5 = 2.0    // R-Y  NS red,   EW yellow
+    const float T6 = 0.5    // R-R  all red (after EW)
+    const float WALK_TIME = 4.0     // green-state exit also ends the walk phase
+
+    // Named defaults above remain constants; active values must be writable.
+    output float t1 = T1, t2 = T2, t3 = T3, t4 = T4, t5 = T5, t6 = T6
+
+    // ASCII codes keep this interface usable in both the simulator and UART.
+    const int ASCII_ZERO = 48, ASCII_NINE = 57, COMMA = 44, CR = 13, LF = 10
+    const int MAX_DIGITS = 4
+
+    // ---------- Table 1: lamp bits of the red LED word ----------
+    const int NS_G = 1, NS_Y = 2, NS_R = 4, EW_G = 8, EW_Y = 16, EW_R = 32
+    const int NS_PED = 64, EW_PED = 128     // bits 6 and 7: the pedestrian lights
+
+    // ---------- Reactive interface ----------
+    input  int  task                    // requested task: 1 = plain cycle, 2 = pedestrians, 3 = configuration
+    input  bool NSraised, EWraised      // pedestrian request buttons (events)
+    output int  activeTask = 1          // task in effect (changes only in R-R)
+    output int  LEDR = 33               // 8 red LEDs: lamps (5..0), NS walk (6), EW walk (7); 33 = G-R
+
+    input int configChar                 // one ASCII character, e.g. 54 = '6'
+    input bool configValid               // true: one character supplied this tick
+    output bool configReady = true       // false: completed packet awaits commit
+    output bool waitingConfig = false    // Task 3 entered: holding red for a packet
+    output int configApplied = 0         // sequence number committed by Lights
+    output int configRejected = 0        // malformed packets terminated by LF
+
+    // Configuration owns the parser and mailbox. Lights only reads pre(...).
+    int configSequence = 0
+    int pending1 = 0, pending2 = 0, pending3 = 0
+    int pending4 = 0, pending5 = 0, pending6 = 0
+    int field = 0, digits = 0, number = 0
+    int staged1 = 0, staged2 = 0, staged3 = 0, staged4 = 0, staged5 = 0
+    bool badPacket = false
+
+    // ---------- Shared variables (single writer each; Lights reads via pre) ----------
+    int nsRequests = 0, ewRequests = 0  // presses counted, written by NSRequest / EWRequest only
+    int nsServed = 0,   ewServed = 0    // presses served, written and read by Lights only
+
+    // ---------- Time (first-class): the phase clock ----------
+    clock c = 0.0           // seconds since the current phase was entered
+
+    // ------------------------------------------------------------------
+    region Lights {
+
+        initial state GR "G-R: NS green, EW red" {
+            clock wNS = 0.0                         // NS walk clock, local to this green
+            entry do c = 0.0; LEDR = EW_R + NS_G    // 33; the walk states add / remove bit 6
+
+            region NSWalk {
+                initial state DecideNS
+                    immediate if activeTask >= 2 && pre(nsRequests) > nsServed
+                        do nsServed = pre(nsRequests); wNS = 0.0 go to WalkNS      // request pending
+                    immediate if !(activeTask >= 2 && pre(nsRequests) > nsServed) go to NoWalkNS
+
+                state WalkNS "NS walk light on" {
+                    entry do LEDR = EW_R + NS_G + NS_PED    // 97
+                }
+                immediate if wNS >= WALK_TIME do nsServed = pre(nsRequests) go to NoWalkNS
+
+                state NoWalkNS "NS walk light off" {
+                    entry do LEDR = EW_R + NS_G             // 33
+                }
+            }
+        }
+        // The one delayed transition on the main six-phase cycle.
+        if c >= t1 go to YR
+
+        state YR "Y-R: NS yellow, EW red" {
+            entry do c = 0.0; LEDR = EW_R + NS_Y    // 34: whole word rewritten, so the NS walk bit is off
+        }
+        immediate if c >= t2 go to RR1
+
+        state RR1 "R-R: all red" {
+            entry do c = 0.0; LEDR = EW_R + NS_R
+        }
+        immediate go to RR1Select
+
+        // Explicit decision states put mode selection before commit/exit.
+        state RR1Select
+            immediate if task == 3 && activeTask != 3
+                do activeTask = 3; waitingConfig = true go to RR1Config
+            immediate if task == 1 || task == 2
+                do activeTask = task; waitingConfig = false go to RR1Config
+            immediate go to RR1Config  // task 3 stays active; invalid modes ignored
+
+        state RR1Config
+            immediate if activeTask == 3 && pre(configSequence) != configApplied
+                do t1 = pre(pending1); t2 = pre(pending2); t3 = pre(pending3);
+                   t4 = pre(pending4); t5 = pre(pending5); t6 = pre(pending6);
+                   configApplied = pre(configSequence); waitingConfig = false; c = 0.0
+                go to RR1Wait  // keep all-red visible for the commit tick, even if t3 = 0
+            immediate go to RR1Exit
+
+        state RR1Exit
+            immediate if !waitingConfig && c >= t3 go to RG
+            immediate go to RR1Wait
+
+        state RR1Wait
+            go to RR1Select  // delayed: recheck mode/packet on the next tick
+
+        state RG "R-G: NS red, EW green" {
+            clock wEW = 0.0                         // EW walk clock, local to this green
+            entry do c = 0.0; LEDR = EW_G + NS_R    // 12; the walk states add / remove bit 7
+
+            region EWWalk {
+                initial state DecideEW
+                    immediate if activeTask >= 2 && pre(ewRequests) > ewServed
+                        do ewServed = pre(ewRequests); wEW = 0.0 go to WalkEW
+                    immediate if !(activeTask >= 2 && pre(ewRequests) > ewServed) go to NoWalkEW
+
+                state WalkEW "EW walk light on" {
+                    entry do LEDR = EW_G + NS_R + EW_PED    // 140
+                }
+                immediate if wEW >= WALK_TIME do ewServed = pre(ewRequests) go to NoWalkEW
+
+                state NoWalkEW "EW walk light off" {
+                    entry do LEDR = EW_G + NS_R             // 12
+                }
+            }
+        }
+        immediate if c >= t4 go to RY
+
+        state RY "R-Y: NS red, EW yellow" {
+            entry do c = 0.0; LEDR = EW_Y + NS_R    // 20: whole word rewritten, so the EW walk bit is off
+        }
+        immediate if c >= t5 go to RR2
+
+        state RR2 "R-R: all red" {
+            entry do c = 0.0; LEDR = EW_R + NS_R
+        }
+        immediate go to RR2Select
+
+        // Explicit decision states put mode selection before commit/exit.
+        state RR2Select
+            immediate if task == 3 && activeTask != 3
+                do activeTask = 3; waitingConfig = true go to RR2Config
+            immediate if task == 1 || task == 2
+                do activeTask = task; waitingConfig = false go to RR2Config
+            immediate go to RR2Config  // task 3 stays active; invalid modes ignored
+
+        state RR2Config
+            immediate if activeTask == 3 && pre(configSequence) != configApplied
+                do t1 = pre(pending1); t2 = pre(pending2); t3 = pre(pending3);
+                   t4 = pre(pending4); t5 = pre(pending5); t6 = pre(pending6);
+                   configApplied = pre(configSequence); waitingConfig = false; c = 0.0
+                go to RR2Wait  // keep all-red visible for the commit tick, even if t6 = 0
+            immediate go to RR2Exit
+
+        state RR2Exit
+            immediate if !waitingConfig && c >= t6 go to GR
+            immediate go to RR2Wait
+
+        state RR2Wait
+            go to RR2Select  // delayed: recheck mode/packet on the next tick
+
+    }
+
+    // ------------------------------------------------------------------
+    region NSRequest {
+        initial state ReleasedNS
+            immediate if NSraised do nsRequests++ go to PressedNS     // one request per press
+
+        state PressedNS "NS button held"
+            if !NSraised go to ReleasedNS                             // delayed: closes this loop
+    }
+
+    // ------------------------------------------------------------------
+    region EWRequest {
+        initial state ReleasedEW
+            immediate if EWraised do ewRequests++ go to PressedEW
+
+        state PressedEW "EW button held"
+            if !EWraised go to ReleasedEW                             // delayed: closes this loop
+    }
+
+    // Independent streaming parser: exactly six 1-4 digit unsigned values.
+    // A malformed packet is discarded through LF, then parsing can recover.
+    // One mailbox provides backpressure: no second packet can overwrite it.
+    region Configuration {
+        initial state Receive
+            immediate if configValid && pre(configReady) go to Classify
+
+        state Classify
+            immediate if configChar == CR go to NextCharacter
+            immediate if configChar == LF && !badPacket && field == 5 && digits > 0
+                do pending1 = staged1; pending2 = staged2; pending3 = staged3;
+                   pending4 = staged4; pending5 = staged5; pending6 = number;
+                   configSequence++; configReady = false;
+                   field = 0; digits = 0; number = 0; badPacket = false
+                go to Published
+            immediate if configChar == LF
+                do configRejected++; field = 0; digits = 0; number = 0; badPacket = false
+                go to NextCharacter
+            immediate if badPacket go to NextCharacter
+            immediate if configChar >= ASCII_ZERO && configChar <= ASCII_NINE && digits < MAX_DIGITS
+                do number *= 10; number += configChar - ASCII_ZERO; digits++
+                go to NextCharacter
+            immediate if configChar == COMMA && digits > 0 && field == 0
+                do staged1 = number; field++; digits = 0; number = 0
+                go to NextCharacter
+            immediate if configChar == COMMA && digits > 0 && field == 1
+                do staged2 = number; field++; digits = 0; number = 0
+                go to NextCharacter
+            immediate if configChar == COMMA && digits > 0 && field == 2
+                do staged3 = number; field++; digits = 0; number = 0
+                go to NextCharacter
+            immediate if configChar == COMMA && digits > 0 && field == 3
+                do staged4 = number; field++; digits = 0; number = 0
+                go to NextCharacter
+            immediate if configChar == COMMA && digits > 0 && field == 4
+                do staged5 = number; field++; digits = 0; number = 0
+                go to NextCharacter
+            // Empty fields, fifth digits, extra commas and other characters.
+            immediate do badPacket = true go to NextCharacter
+
+        state NextCharacter
+            go to Receive  // one delayed edge: at most one character per tick
+
+        state Published
+            // Mailbox remains stable until Lights acknowledges its sequence.
+            if pre(configApplied) == configSequence
+                do configReady = true go to Receive
+    }
+}
