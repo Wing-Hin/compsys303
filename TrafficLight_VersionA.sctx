@@ -1,5 +1,5 @@
-// COMPSYS 303 - Version A, Tasks 1, 2 and 3.
-// task: 1 = basic, 2 = pedestrians, 3 = pedestrians + configuration.
+// COMPSYS 303 - Version A, Tasks 1, 2, 3 and 4.
+// task: 1 = basic, 2 = pedestrians, 3 = configuration, 4 = camera + pedestrians.
 // All mode changes and timing commits occur with LEDR = 36 (all red).
 // Time unit: seconds; supply deltaT in seconds in the simulator.
 // Configuration: ASCII character sequence on configChar, configValid per tick.
@@ -20,6 +20,8 @@ scchart TrafficLight_A {
     const float T6 = 0.5    // R-R  all red (after EW)
     const float WALK_TIME = 4.0     // green-state exit also ends the walk phase
 
+    const float CAMERA_DWELL = 1.0 // allowed vehicle dwell after camera activation
+
     // Named defaults above remain constants; active values must be writable.
     output float t1 = T1, t2 = T2, t3 = T3, t4 = T4, t5 = T5, t6 = T6
 
@@ -32,24 +34,34 @@ scchart TrafficLight_A {
     const int NS_PED = 64, EW_PED = 128     // bits 6 and 7: the pedestrian lights
 
     // ---------- Reactive interface ----------
-    input  int  task                    // requested task: 1 = plain cycle, 2 = pedestrians, 3 = configuration
+    input  int  task                    // requested task: 1 = plain cycle, 2 = pedestrians, 3 = configuration, 4 = camera
     input  bool NSraised, EWraised      // pedestrian request buttons (events)
     output int  activeTask = 1          // task in effect (changes only in R-R)
-    output int  LEDR = 33               // 8 red LEDs: lamps (5..0), NS walk (6), EW walk (7); 33 = G-R
+    output int  LEDR = 33               // Initially NS green(1) + EW red(32)
 
     input int configChar                 // one ASCII character, e.g. 54 = '6'
-    input bool configValid               // true: one character supplied this tick
-    output bool configReady = true       // false: completed packet awaits commit
-    output bool waitingConfig = false    // Task 3 entered: holding red for a packet
-    output int configApplied = 0         // sequence number committed by Lights
-    output int configRejected = 0        // malformed packets terminated by LF
+    input bool configValid               // true: read the character in configChar this tick
+    output bool configReady = true       // true: ready to receive a configuration character
+    output bool waitingConfig = false    // Task 3 entered: holding all-red while waiting for valid configuration
+    output int configApplied = 0         // how many packets have been successfully applied.
+    output int configRejected = 0        // counts invalid packets rejected when their newline arrives
+
+    input bool vehicleButton            // rising edges toggle entry/exit
+    output bool vehiclePresent = false
+    output bool cameraArmed = false      // a dwell timer is running
+    output bool cameraActivated = false  // one-tick message indicators
+    output bool snapshotTaken = false
+    output bool vehicleLeft = false
+    output int snapshots = 0             // cumulative count, useful in simulation
+    bool photographed = false            // at most one snapshot per vehicle visit
+    clock cameraClock = 0.0               // independent of the traffic phase clock
 
     // Configuration owns the parser and mailbox. Lights only reads pre(...).
-    int configSequence = 0
+    int configSequence = 0 // increments on each valid packet
     int pending1 = 0, pending2 = 0, pending3 = 0
     int pending4 = 0, pending5 = 0, pending6 = 0
-    int field = 0, digits = 0, number = 0
-    int staged1 = 0, staged2 = 0, staged3 = 0, staged4 = 0, staged5 = 0
+    int field = 0, digits = 0, number = 0 // parser state: which field, how many digits, current number
+    int staged1 = 0, staged2 = 0, staged3 = 0, staged4 = 0, staged5 = 0 // Temporarily store the first five completed numbers while the rest of the packet is arriving.
     bool badPacket = false
 
     // ---------- Shared variables (single writer each; Lights reads via pre) ----------
@@ -99,12 +111,12 @@ scchart TrafficLight_A {
         state RR1Select
             immediate if task == 3 && activeTask != 3
                 do activeTask = 3; waitingConfig = true go to RR1Config
-            immediate if task == 1 || task == 2
+            immediate if task == 1 || task == 2 || task == 4
                 do activeTask = task; waitingConfig = false go to RR1Config
-            immediate go to RR1Config  // task 3 stays active; invalid modes ignored
+            immediate go to RR1Config  // retain current mode for task 3 or invalid inputs
 
         state RR1Config
-            immediate if activeTask == 3 && pre(configSequence) != configApplied
+            immediate if activeTask >= 3 && pre(configSequence) != configApplied
                 do t1 = pre(pending1); t2 = pre(pending2); t3 = pre(pending3);
                    t4 = pre(pending4); t5 = pre(pending5); t6 = pre(pending6);
                    configApplied = pre(configSequence); waitingConfig = false; c = 0.0
@@ -154,12 +166,12 @@ scchart TrafficLight_A {
         state RR2Select
             immediate if task == 3 && activeTask != 3
                 do activeTask = 3; waitingConfig = true go to RR2Config
-            immediate if task == 1 || task == 2
+            immediate if task == 1 || task == 2 || task == 4
                 do activeTask = task; waitingConfig = false go to RR2Config
-            immediate go to RR2Config  // task 3 stays active; invalid modes ignored
+            immediate go to RR2Config  // retain current mode for task 3 or invalid inputs
 
         state RR2Config
-            immediate if activeTask == 3 && pre(configSequence) != configApplied
+            immediate if activeTask >= 3 && pre(configSequence) != configApplied
                 do t1 = pre(pending1); t2 = pre(pending2); t3 = pre(pending3);
                    t4 = pre(pending4); t5 = pre(pending5); t6 = pre(pending6);
                    configApplied = pre(configSequence); waitingConfig = false; c = 0.0
@@ -241,4 +253,38 @@ scchart TrafficLight_A {
             if pre(configApplied) == configSequence
                 do configReady = true go to Receive
     }
+
+    // Vehicle edges and camera decisions share one sequential region: a leave
+    // on the deadline tick is processed BEFORE the timeout (no false snapshot).
+    // Read current Lights outputs; Camera never writes LEDR or activeTask.
+    region Camera {
+        initial state SampleVehicle {
+            entry do cameraActivated = false; snapshotTaken = false; vehicleLeft = false
+        }
+        immediate if vehicleButton && !pre(vehicleButton) && vehiclePresent
+            do vehiclePresent = false; photographed = false go to ReportLeave
+        immediate if vehicleButton && !pre(vehicleButton) && !vehiclePresent
+            do vehiclePresent = true; photographed = false go to CheckCamera
+        immediate go to CheckCamera
+
+        state ReportLeave
+            immediate if activeTask == 4
+                do vehicleLeft = true; print("Vehicle left\\n") go to CheckCamera
+            immediate go to CheckCamera
+
+        state CheckCamera
+            immediate if activeTask != 4 || !vehiclePresent
+                do cameraArmed = false go to NextCameraTick
+            immediate if cameraArmed && cameraClock >= CAMERA_DWELL
+                do cameraArmed = false; photographed = true; snapshotTaken = true;
+                   snapshots++; print("Snapshot taken\\n") go to NextCameraTick
+            immediate if !cameraArmed && !photographed && (LEDR == 34 || LEDR == 20)
+                do cameraClock = 0.0; cameraArmed = true; cameraActivated = true;
+                   print("Camera activated\\n") go to NextCameraTick
+            immediate go to NextCameraTick
+
+        state NextCameraTick
+            go to SampleVehicle  // delayed: one vehicle/camera decision per tick
+    }
 }
+

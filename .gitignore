@@ -1,0 +1,32 @@
+# KIELER-generated simulation code, dependencies, and binaries
+kieler-gen/
+
+# Temporary working files
+/tmp/
+*.tmp
+*.log
+*.bak
+*.swp
+*.swo
+*~
+
+# Compiled Java and native objects
+*.class
+*.o
+*.obj
+
+# Local editor / Eclipse workspace settings
+.vscode/
+.idea/
+.metadata/
+
+# Local environment secrets (keep example configuration trackable)
+.env
+.env.*
+!.env.example
+!.env.sample
+
+# Operating-system metadata
+.DS_Store
+Thumbs.db
+Desktop.ini
