@@ -30,3 +30,6 @@ kieler-gen/
 .DS_Store
 Thumbs.db
 Desktop.ini
+
+# Python byte-code caches
+__pycache__/
