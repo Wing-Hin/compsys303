@@ -107,8 +107,13 @@ int main(void)
     }
 
 #if CHART == 4
-    int uartFd = open(UART_NAME, O_RDONLY | O_NONBLOCK);
-    if (uartFd < 0) printf("UART not opened: Task 3 configuration input disabled\n");
+    /* Task 3 packets come from either port: the RS-232 UART (DB9) or the
+     * JTAG UART console (nios2-terminal over the USB-Blaster cable). */
+    int cfgFd[2];
+    cfgFd[0] = open(UART_NAME, O_RDONLY | O_NONBLOCK);
+    cfgFd[1] = open(JTAG_UART_NAME, O_RDONLY | O_NONBLOCK);
+    if (cfgFd[0] < 0) printf("RS-232 UART not opened: Task 3 input from the JTAG console only\n");
+    if (cfgFd[1] < 0) printf("JTAG UART not opened: Task 3 input from RS-232 only\n");
 #endif
 
     /* Start the external timer. alt_alarm counts system-clock ticks. */
@@ -144,14 +149,18 @@ int main(void)
         d.task          = (int)(sw & SW_TASK) + 1;
         d.vehicleButton = (keys & KEY_CAR) != 0;
 
-        /* Task 3: one UART byte per tick, and only when the chart said it was
-         * ready after the previous tick. Bytes wait in the HAL UART buffer. */
+        /* Task 3: one byte per tick, and only when the chart said it was ready
+         * after the previous tick. RS-232 is read first, then the JTAG console;
+         * bytes wait in each HAL buffer. Send a packet on one port at a time. */
         d.configValid = 0;
-        if (uartFd >= 0 && d.configReady) {
+        if (d.configReady) {
             char ch;
-            if (read(uartFd, &ch, 1) == 1) {
-                d.configChar  = (unsigned char) ch;
-                d.configValid = 1;
+            int  i;
+            for (i = 0; i < 2 && !d.configValid; i++) {
+                if (cfgFd[i] >= 0 && read(cfgFd[i], &ch, 1) == 1) {
+                    d.configChar  = (unsigned char) ch;
+                    d.configValid = 1;
+                }
             }
         }
 #endif

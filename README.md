@@ -3,7 +3,7 @@
 **Version A = simulator** (Timed SCCharts in KIELER, time from `deltaT`).
 **Version B = board** (the same controller on a Nios II on the DE2-115, time from a hardware timer).
 
-Group members: **Harold** (`<full name, UPI>`) and **Lucas** (`<full name, UPI>`).
+Group members: **Harold Tien** (`thar970`) and **Lucas Young** (`wyou790`).
 
 ## What is where
 
@@ -83,8 +83,8 @@ Rebuilding the hardware: `qsys-generate nios2_system.qsys --synthesis=VERILOG`, 
 | LEDR0 / LEDR1 / LEDR2 | NS green / yellow / red |
 | LEDR3 / LEDR4 / LEDR5 | EW green / yellow / red |
 | LEDR6 / LEDR7 | NS walk / EW walk |
-| RS-232 (UART) | Task 3 packets at **115200 8N1** |
-| JTAG UART (`nios2-terminal`) | Console: every LEDR change with its measured duration, ticks and timer events; Task 4 messages (`Camera activated`, `Snapshot taken`, `Vehicle left`) |
+| RS-232 (UART) | Task 3 packets at **115200 8N1** (optional: needs a DB9 serial cable) |
+| JTAG UART (`nios2-terminal`) | Console: every LEDR change with its measured duration, ticks and timer events; Task 4 messages (`Camera activated`, `Snapshot taken`, `Vehicle left`). Also accepts Task 3 packets typed into `nios2-terminal` (USB-Blaster cable only) |
 
 **Task 3 packet:** six unsigned integers (1-4 digits each) in seconds, comma-separated, ending with LF
 (CR is ignored), in the order G-R, Y-R, R-R, R-G, R-Y, R-R. Example: `8,3,1,8,3,1` + LF. A valid packet is
@@ -104,6 +104,8 @@ Default timing: G 6 s, Y 2 s, all-red 0.5 s, walk 4 s, camera dwell 1 s; one tim
   or `printf` can briefly delay the loop. The lights keep their timing in the tested 50 s without a console.
 * Task 3 values are **integer seconds** and must be **at least 1 s**: the parser accepts 0, which skips
   that yellow or all-red phase.
+* Task 3 bytes are read from RS-232 first, then from the JTAG console. Send a packet on one port
+  at a time: two packets arriving together would have their bytes mixed.
 * The console's microsecond times wrap after 85.9 s (32-bit timer at 50 MHz); a single phase longer than
   that (a Task 3 hold) is printed 85.9 s short. Timer-event counts are always exact.
 
