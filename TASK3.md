@@ -4,10 +4,21 @@ Open `TrafficLight_VersionA.sctx` in KIELER / VS Code. It now implements Tasks
 1-3. The standalone Task 1 and Task 2 files are unchanged. Task 4 and external
 timer Version B are not implemented here.
 
+> **Update (2026-10-19), applies to Version A and Version B:** packet values are
+> now **milliseconds** (1..9999), so the defaults `6000,2000,500,6000,2000,500`
+> (including the 0.5 s all-red) can be sent; Version A converts them to seconds
+> (`/ MS_PER_S`), Version B uses them as they are. A **0** field now makes the
+> packet invalid (a zero yellow or all-red would skip that safety phase). The
+> commit goes to `RRnExit`, whose clock guard requests the wake-up `t3`/`t6`
+> later, so the new all-red ends on time in pure Dynamic mode. The walkthrough
+> below uses the new format; the current regression is
+> `VersionB/evidence/versionA/run_versionA_sim.py` (A2-A17).
+
 ## What changed and why
 
 1. **Writable timings.** `T1` through `T6` still define the initial defaults.
-   New output variables `t1` through `t6` hold the active durations, in seconds.
+   New output variables `t1` through `t6` hold the active durations, in seconds
+   (the packet's milliseconds divided by `MS_PER_S` = 1000.0).
    The light transition guards now compare the phase clock with these variables.
    A true constant cannot be overwritten at runtime, so this separates the
    brief's named defaults from the values Task 3 changes.
@@ -57,10 +68,12 @@ timer Version B are not implemented here.
   requires a new packet; an already-applied packet cannot release the wait.
 - Values outside `task = 1..3` are ignored. Configured timings persist across
   mode changes; resetting the simulation restores defaults.
-- Values are **integer seconds**. Leading zeros and values 0..9999 are accepted
-  because the brief specifies digit length without a positive minimum. Zero
-  is a boundary test, not a recommended demonstration timing. A commit keeps
-  all-red visible for at least that tick even with a zero red duration.
+- Values are **integer milliseconds**, 1..9999. Leading zeros are accepted
+  (`0800` = 800 ms). A **0** field is rejected: the brief fixes only the digit
+  count, but a zero yellow or all-red would let green follow green, which a
+  safety-relevant controller must not allow. Because every value is at least
+  1 ms, a commit (which resets the clock) always keeps the all-red visible for
+  that tick, and the exit guard requests the wake-up for the new duration.
 - `WALK_TIME` stays 4 seconds. A configured green shorter than that ends its
   nested walk phase when green ends, so a walk light cannot extend into yellow.
 - The single pending-packet slot intentionally uses backpressure rather than
@@ -74,14 +87,17 @@ timer Version B are not implemented here.
 2. Set `task = 3`, `configValid = false`, and both request buttons false. Step
    forward with a positive `deltaT` until `activeTask = 3`, `LEDR = 36`, and
    `waitingConfig = true`. Default timings reach the first red after 8 seconds.
-3. Send the packet `8,3,1,8,3,1\n`. Here `\n` means a single LF character,
-   **not** a backslash followed by the letter n. On each step set `configValid`
-   true and set `configChar` to the next ASCII code below. You can use
-   `deltaT = 0` for these input-only ticks.
+3. Send the packet `8000,3000,1000,8000,3000,1000\n` (milliseconds). Here `\n`
+   means a single LF character, **not** a backslash followed by the letter n. On
+   each step set `configValid` true and set `configChar` to the next ASCII code.
+   You can use `deltaT = 0` for these input-only ticks.
 
-   | Character | 8 | , | 3 | , | 1 | , | 8 | , | 3 | , | 1 | LF |
-   |---|---|---|---|---|---|---|---|---|---|---|---|---|
-   | `configChar` | 56 | 44 | 51 | 44 | 49 | 44 | 56 | 44 | 51 | 44 | 49 | 10 |
+   | Character | 0 | 1 | 3 | 8 | , | LF |
+   |---|---|---|---|---|---|---|
+   | `configChar` | 48 | 49 | 51 | 56 | 44 | 10 |
+
+   so the 30 codes are `56 48 48 48 44  51 48 48 48 44  49 48 48 48 44`
+   `56 48 48 48 44  51 48 48 48 44  49 48 48 48 10`.
 
    One step accepts one character. `configValid` may stay true across these
    consecutive steps, but that means **a new character is supplied every tick**.
@@ -89,12 +105,14 @@ timer Version B are not implemented here.
    was true after the previous tick. After LF, it becomes false temporarily.
 
 4. Set `configValid = false` and step again. `configApplied` becomes 1,
-   `waitingConfig` becomes false, and `t1..t6` become `8,3,1,8,3,1` together.
+   `waitingConfig` becomes false, and `t1..t6` become 8.0, 3.0, 1.0, 8.0, 3.0,
+   1.0 s together (`sleepT` = 1.0 on that tick: the new all-red's wake-up).
    Following the acknowledgement, `configReady` returns true. With positive
    elapsed time, the controller holds the newly configured all-red duration
    and resumes the light cycle.
-5. Try `1,2,3\n` after entering Task 3 again. `configRejected` increments and
-   the controller stays red. Then send a valid packet to release it.
+5. Try `1,2,3\n` (or `6000,2000,0,6000,2000,500\n`) after entering Task 3
+   again. `configRejected` increments and the controller stays red. Then send a
+   valid packet to release it.
 6. Send another valid packet during green. Observe that the active durations
    and `configApplied` remain unchanged until the next all-red phase.
 

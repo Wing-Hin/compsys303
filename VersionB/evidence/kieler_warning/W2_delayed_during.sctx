@@ -1,0 +1,15 @@
+// KIELER warning experiment W2 (not part of the controller): the same loop as W1
+// (ONE delayed transition), plus a counter in a during action - the Version B
+// counting style. Shows that "Instantaneous loop detected!" comes from KIELER's
+// expansion of during actions, while the code is still generated.
+scchart During {
+    input bool t
+    output int L = 0
+    output int c = 0
+    region R {
+        initial state A { entry do c = 0; L = 1  during if t do c++ }
+        immediate if c >= 2 go to B
+        state B { entry do c = 0; L = 2  during if t do c++ }
+        if c >= 2 go to A
+    }
+}

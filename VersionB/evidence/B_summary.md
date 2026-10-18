@@ -212,20 +212,20 @@ File `B_restored_10ms_after_E6.txt`: chart TIMER_MS = 10, main.c TIMER_PERIOD_MS
 
 All phases: 92689 ticks, 4250 timer events, 2181 ticks/s, 21.81 ticks per event, 95.41 % of ticks without a timer event.
 
-## C3: Task 3 packets over the JTAG console (four time-out sets in one log: intended / error columns refer to the defaults, see final_test_results.md C3)
+## C3: Task 3 packets over the JTAG console (several time-out sets in one log: intended / error columns refer to the defaults, see final_test_results.md C3)
 
-File `B_C3_jtag_packets.txt`: chart TIMER_MS = 10, main.c TIMER_PERIOD_MS = 10, 388 phases, 6 program start(s).
+File `B_C3_jtag_packets.txt`: chart TIMER_MS = 10, main.c TIMER_PERIOD_MS = 10, 81 phases, 1 program start(s).
 
 | Phase | LEDR | Intended ms (events) | n | Mean ms | Min ms | Max ms | Mean error ms | Jitter ms | Mean ticks | Mean events | Ticks/event | Idle share |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| G-R  NS green | 33->34 | 6000 (600) | 66 | 5606.077 | 1999.642 | 8000.331 | -393.923 | 6000.689 | 11492.2 | 560.6 | 20.50 | 95.12 % |
-| Y-R  NS yellow | 34->36 | 2000 (200) | 66 | 2000.003 | 999.901 | 3000.397 | 0.003 | 2000.496 | 4107.5 | 200.0 | 20.54 | 95.13 % |
-| R-R  after NS | 36->12 | 500 (50) | 66 | 976.349 | 499.640 | 19940.280 | 476.349 | 19440.640 | 2000.8 | 97.6 | 20.49 | 95.12 % |
-| R-G  EW green | 12->20 | 6000 (600) | 64 | 5750.062 | 1999.710 | 8000.455 | -249.938 | 6000.745 | 11847.1 | 575.0 | 20.60 | 95.15 % |
-| R-Y  EW yellow | 20->36 | 2000 (200) | 63 | 2047.559 | 999.553 | 3000.197 | 47.559 | 2000.644 | 4216.3 | 204.8 | 20.59 | 95.14 % |
-| R-R  after EW | 36->33 | 500 (50) | 63 | 1679.210 | 499.681 | 63289.777 | 1179.210 | 62790.096 | 3430.3 | 167.9 | 20.43 | 95.10 % |
+| G-R  NS green | 33->34 | 6000 (600) | 14 | 3925.650 | 1239.711 | 8000.198 | -2074.350 | 6760.487 | 8699.1 | 392.6 | 22.16 | 95.49 % |
+| Y-R  NS yellow | 34->36 | 2000 (200) | 14 | 1520.008 | 569.638 | 3000.265 | -479.992 | 2430.627 | 3356.4 | 152.0 | 22.08 | 95.47 % |
+| R-R  after NS | 36->12 | 500 (50) | 14 | 2713.676 | 89.780 | 30530.121 | 2213.676 | 30440.341 | 5819.2 | 271.4 | 21.44 | 95.34 % |
+| R-G  EW green | 12->20 | 6000 (600) | 13 | 5178.406 | 1999.828 | 8000.180 | -821.594 | 6000.352 | 11186.4 | 517.8 | 21.60 | 95.37 % |
+| R-Y  EW yellow | 20->36 | 2000 (200) | 13 | 1698.480 | 769.704 | 3000.211 | -301.520 | 2230.507 | 3687.0 | 169.8 | 21.71 | 95.39 % |
+| R-R  after EW | 36->33 | 500 (50) | 13 | 646.180 | 99.760 | 1000.229 | 146.180 | 900.469 | 1383.3 | 64.6 | 21.41 | 95.33 % |
 
-All phases: 2401583 ticks, 116923 timer events, 2054 ticks/s, 20.54 ticks per event, 95.13 % of ticks without a timer event.
+All phases: 461583 ticks, 21203 timer events, 2177 ticks/s, 21.77 ticks per event, 95.41 % of ticks without a timer event.
 
 ## B_C2_task2
 

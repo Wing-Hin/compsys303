@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-COMPSYS 303 Version A - headless KIELER simulation regression (tests A2-A11).
+COMPSYS 303 Version A - headless KIELER simulation regression (tests A2-A11, A13-A17).
 
 What it runs: the simulator that KIELER itself generates for "Netlist-based
 Simulation (C)" (compilation system de.cau.cs.kieler.sccharts.simulation.netlist.c),
@@ -17,7 +17,12 @@ is the time that has actually passed:
     and are exported for the Version A vs Version B figure.
   * A3-A11 use exact virtual time (deltaT = sleepT), so they finish in seconds.
 When the chart requests no wake-up (sleepT = 0, or KIELER's default 1000 s, e.g.
-in the Task 3 hold) the driver keeps ticking every 0.1 s.
+in the Task 3 hold) the driver keeps ticking every 0.1 s - except in STRICT
+Dynamic mode (A8, A14, A15), where nothing ticks without a wake-up or an input,
+exactly as in KIELER's dynamic ticking. A missing wake-up then shows as a failure.
+A14/A15 count those ticks (the computational-effort comparison, brief Section 4).
+A16/A17 run the standalone Part 1 charts Task1_VersionA / Task2_VersionA.
+Task 3 packet values are milliseconds (1..9999); a 0 field is invalid (A13).
 Buttons are one-tick pulses with deltaT = 0 (as in TASK3.md / TASK4.md);
 Task 3 characters are sent one per tick, only while configReady is true.
 
@@ -50,6 +55,8 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
 CHART = ROOT / "TrafficLight_VersionA.sctx"
+TASK1_CHART = ROOT / "Task1_VersionA.sctx"
+TASK2_CHART = ROOT / "Task2_VersionA.sctx"
 SYSTEM = "de.cau.cs.kieler.sccharts.simulation.netlist.c"
 EPS = 1e-6
 POLL = 0.1                 # step used when the chart requests no wake-up
@@ -83,12 +90,15 @@ def build_simulator(workdir, chart):
 class Sim:
     """One KIELER simulator process; keeps simulated time t (seconds)."""
 
-    def __init__(self, exe, name):
+    def __init__(self, exe, name, inputs=None):
         self.p = subprocess.Popen([exe], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                   text=True, bufsize=1)
         self.name, self.t = name, 0.0
-        self.inp = {"task": 1, "NSraised": False, "EWraised": False, "vehicleButton": False,
-                    "configChar": 0, "configValid": False}
+        self.idle = 0.0                        # strict-mode time not yet passed to the chart
+        self.ticks = 0                         # reactions computed
+        self.inp = inputs if inputs is not None else {
+            "task": 1, "NSraised": False, "EWraised": False, "vehicleButton": False,
+            "configChar": 0, "configValid": False}
         self.out, msgs = self._read()          # values after reset, before the first tick
         self.trace = []
         self.changes = []                      # (t, from, to) LEDR changes
@@ -113,10 +123,13 @@ class Sim:
     def tick(self, dt, **inputs):
         before = self.out
         self.inp.update(inputs)
-        self.p.stdin.write(json.dumps(dict(self.inp, deltaT=dt)) + "\n")
+        sent = dt + self.idle
+        self.p.stdin.write(json.dumps(dict(self.inp, deltaT=sent)) + "\n")
         self.p.stdin.flush()
         self.out, msgs = self._read()
         self.t += dt
+        self.idle = 0.0
+        self.ticks += 1
         if self.trace and self.out["LEDR"] != before["LEDR"] or not self.trace:
             self.changes.append((self.t, before.get("LEDR", -1) if self.trace else -1, self.out["LEDR"]))
         if self.trace and self.out.get("activeTask") != before.get("activeTask"):
@@ -129,14 +142,19 @@ class Sim:
         keep = {k: self.out.get(k) for k in ("LEDR", "activeTask", "sleepT", "configReady", "waitingConfig",
                                              "configApplied", "configRejected", "t1", "t2", "t3", "t4",
                                              "t5", "t6", "vehiclePresent", "cameraArmed", "snapshots")}
-        self.trace.append({"t": round(self.t, 9), "deltaT": dt, "in": dict(self.inp), "out": keep, "msgs": msgs})
+        self.trace.append({"t": round(self.t, 9), "deltaT": sent, "in": dict(self.inp), "out": keep, "msgs": msgs})
         return self.out
 
     # ---- helpers -------------------------------------------------------
-    def run_until(self, t_end, realtime=False):
-        """Dynamic-mode stepping up to simulated time t_end."""
+    def run_until(self, t_end, realtime=False, strict=False):
+        """Dynamic-mode stepping up to simulated time t_end. strict: no wake-up
+        requested -> no tick at all (time just passes), as in KIELER's dynamic ticks."""
         while self.t < t_end - EPS:
             sleep_t = self.out.get("sleepT") or 0
+            if strict and not 0 < sleep_t < NO_DEADLINE:
+                self.idle += t_end - self.t        # idle: nothing would wake the chart; the
+                self.t = t_end                     # next tick's deltaT includes this time
+                break
             # No wake-up requested (e.g. the Task 3 hold): keep ticking in 0.1 s steps
             # instead of jumping, so a commit or a mode change is seen when it happens.
             dt = min(sleep_t if 0 < sleep_t < NO_DEADLINE else POLL, t_end - self.t)
@@ -146,8 +164,8 @@ class Sim:
                 dt = time.perf_counter() - start
             self.tick(dt)
 
-    def run_for(self, seconds, realtime=False):
-        self.run_until(self.t + seconds, realtime)
+    def run_for(self, seconds, realtime=False, strict=False):
+        self.run_until(self.t + seconds, realtime, strict)
 
     def run_until_ledr(self, value, limit=200.0):
         """Step until LEDR changes to value (returns the time) or the limit."""
@@ -294,8 +312,8 @@ def a7(exe):
     s.save()
 
 
-def a8_a9(exe):
-    s = Sim(exe, "A8_A9_task3")
+def a8_a9_a13(exe):
+    s = Sim(exe, "A8_A9_A13_task3")
     s.tick(0, task=3)
     s.run_until_ledr(RR)
     s.run_for(5.0)
@@ -306,17 +324,104 @@ def a8_a9(exe):
     a9 = s.out["configRejected"] == rej0 + 1 and s.out["LEDR"] == RR and s.out["configApplied"] == 0
     check("A9", held and a9, f"'1,2,3' + LF in the Task 3 hold: configRejected {rej0} -> {s.out['configRejected']}, "
           f"lights still 36 after 10 s, nothing applied")
+    rej1 = s.out["configRejected"]
+    s.send("6000,2000,0,6000,2000,500\n")           # A13: a 0 field (comma path) ...
+    s.send("6000,2000,500,6000,2000,0\n")           # ... and a 0 last field (LF path)
+    s.run_for(10.0)
+    a13 = s.out["configRejected"] == rej1 + 2 and s.out["LEDR"] == RR and s.out["configApplied"] == 0
+    check("A13", a13, f"'6000,2000,0,...' and '...,2000,0' + LF in the hold: configRejected {rej1} -> "
+          f"{s.out['configRejected']}, lights still 36, nothing applied (0 would skip a safety phase)")
     t_send = s.t
-    s.send("8,3,1,8,3,1\n")                         # A8: valid
-    s.run_for(30.0)
+    s.send("8000,3000,1000,8000,3000,1000\n")       # A8: valid (milliseconds)
+    s.run_for(30.0, strict=True)                    # pure Dynamic: only the chart's own wake-ups tick
     ph = s.phases_after(t_send)
     got = [(a, b, round(d, 6)) for a, b, d in ph[:6]]
     want = [(12, 20, 8.0), (20, 36, 3.0), (36, 33, 1.0), (33, 34, 8.0), (34, 36, 3.0), (36, 12, 1.0)]
     at_rr = bool(s.applied) and s.applied[0][1] == RR
-    commit_sleep = next((e["out"]["sleepT"] for e in s.trace if e["out"]["configApplied"]), None)
-    check("A8", got == want and at_rr, f"'8,3,1,8,3,1' + LF: applied at R-R ({'yes' if at_rr else 'no'}); "
-          f"phases {[d for _, _, d in got]} s. Note: the commit tick requests sleepT = {commit_sleep} "
-          f"(no wake-up), so pure Dynamic mode needs another tick to end the new all-red")
+    commit = next((e for e in s.trace if e["out"]["configApplied"]), None)
+    commit_sleep = commit["out"]["sleepT"] if commit else None
+    first_rr = (next((c[0] for c in s.changes if c[0] >= t_send - EPS and c[1] == RR), None) - commit["t"]
+                if commit else None)
+    ok = got == want and at_rr and commit_sleep is not None and abs(commit_sleep - 1.0) < EPS \
+        and first_rr is not None and abs(first_rr - 1.0) < EPS
+    check("A8", ok, f"'8000,3000,1000,8000,3000,1000' + LF, strict Dynamic mode: applied at R-R "
+          f"({'yes' if at_rr else 'no'}); the commit tick requests sleepT = {commit_sleep} s, the all-red ends "
+          f"{first_rr if first_rr is None else round(first_rr, 6)} s after the commit; phases "
+          f"{[d for _, _, d in got]} s")
+    s.save()
+
+
+def count_ticks(s, seconds, what):
+    """Strict Dynamic run: (ticks, LEDR changes, exact durations?) over `seconds`."""
+    n0, c0, t0 = s.ticks, len(s.changes), s.t
+    s.run_for(seconds, strict=True)
+    return s.ticks - n0, len(s.changes) - c0
+
+
+def a14(exe):
+    s = Sim(exe, "A14_ticks_task1")
+    s.tick(0, task=1)
+    ticks, changes = count_ticks(s, 10 * 17.0, "task 1")
+    durs = s.phases_after(0)
+    nominal = {(33, 34): 6.0, (34, 36): 2.0, (36, 12): 0.5, (12, 20): 6.0, (20, 36): 2.0, (36, 33): 0.5}
+    exact = all(abs(d - nominal[(a, b)]) < EPS for a, b, d in durs)
+    ok = exact and changes >= 59 and ticks <= 2 * changes + 2
+    check("A14", ok, f"Task 1, 10 cycles (170 s) in strict Dynamic mode: {ticks} reactions for {changes} LEDR "
+          f"changes = {ticks / 10:.1f} per 17 s cycle, every phase exact ({'yes' if exact else 'no'}). "
+          f"Version B at 10 ms computes 2,050-2,200 reactions per second, about 35,000-37,000 per cycle "
+          f"(B_summary.md)")
+    s.save()
+
+
+def a15(exe):
+    s = Sim(exe, "A15_ticks_task4")
+    s.tick(0, task=4)
+    s.run_until_ledr(R_G)
+    n0 = s.ticks
+    s.run_for(1.0, strict=True)
+    s.pulse("vehicleButton")                        # car enters in green, stays
+    s.run_until_ledr(R_Y)
+    s.run_for(17.0, strict=True)                    # yellow, camera dwell, snapshot, rest of the cycle
+    s.pulse("vehicleButton")                        # leaves
+    s.run_for(17.0, strict=True)
+    ticks = s.ticks - n0
+    snap = [t for t, m in s.msgs if "Snapshot taken" in m]
+    act = [t for t, m in s.msgs if "Camera activated" in m]
+    ok = len(act) == 1 and len(snap) == 1 and abs(snap[0] - act[0] - 1.0) < EPS and ticks < 60
+    check("A15", ok, f"Task 4, about 2 cycles with a car and a snapshot in strict Dynamic mode: {ticks} reactions "
+          f"(4 of them the button pulses); snapshot {snap[0] - act[0] if act and snap else '-'} s after "
+          f"activation - two independent clocks, each tick only when one of them expires or an input arrives")
+    s.save()
+
+
+def a16(exe1):
+    s = Sim(exe1, "A16_task1_chart", inputs={})
+    s.tick(0)
+    ticks, changes = count_ticks(s, 2 * 17.0 + 0.2, "task 1 chart")
+    seq = [(a, b) for a, b, _ in s.phases_after(0)][:12]
+    want = [(33, 34), (34, 36), (36, 12), (12, 20), (20, 36), (36, 33)] * 2
+    nominal = {(33, 34): 6.0, (34, 36): 2.0, (36, 12): 0.5, (12, 20): 6.0, (20, 36): 2.0, (36, 33): 0.5}
+    exact = all(abs(d - nominal[(a, b)]) < EPS for a, b, d in s.phases_after(0))
+    check("A16", seq == want and exact, f"Task1_VersionA.sctx (Part 1), strict Dynamic mode: sequence "
+          f"{'33,34,36,12,20,36 x2' if seq == want else seq}, durations exact ({'yes' if exact else 'no'}), "
+          f"{ticks} reactions for {changes} changes")
+    s.save()
+
+
+def a17(exe2):
+    s = Sim(exe2, "A17_task2_chart", inputs={"NSraised": False, "EWraised": False})
+    s.tick(0)
+    s.run_until_ledr(R_G)
+    s.run_for(1.0)
+    s.pulse("NSraised")
+    t97 = s.run_until_ledr(NS_WALK)
+    s.run_until_ledr(R_G)
+    s.run_for(1.0)
+    walk = [d for a, b, d in s.phases_after(t97 or 0) if a == NS_WALK]
+    rest = [d for a, b, d in s.phases_after(t97 or 0) if (a, b) == (G_R, Y_R)]
+    ok = t97 is not None and walk and abs(walk[0] - 4.0) < EPS and rest and abs(rest[0] - 2.0) < EPS
+    check("A17", ok, f"Task2_VersionA.sctx (Part 1): NS press in R-G -> next G-R shows 97 for "
+          f"{walk[0] if walk else '-'} s, then 33 for the remaining {rest[0] if rest else '-'} s")
     s.save()
 
 
@@ -364,14 +469,17 @@ def main():
     global OUT
     OUT = Path(args.out)
     OUT.mkdir(parents=True, exist_ok=True)
-    tmp = None
+    tmp = tempfile.mkdtemp(prefix="versionA_sim_")
     if args.sim:
         exe, warnings = args.sim, ["(prebuilt simulator)"]
     else:
-        tmp = tempfile.mkdtemp(prefix="versionA_sim_")
-        exe, warnings = build_simulator(tmp, args.chart)
-    for test in (a2, a3, a4, a5, a6, a7, a8_a9, a10, a11):
+        exe, warnings = build_simulator(Path(tmp) / "combined", args.chart)
+    exe1, _ = build_simulator(Path(tmp) / "task1", TASK1_CHART)
+    exe2, _ = build_simulator(Path(tmp) / "task2", TASK2_CHART)
+    for test in (a2, a3, a4, a5, a6, a7, a8_a9_a13, a10, a11, a14, a15):
         test(exe)
+    a16(exe1)
+    a17(exe2)
     lines = [f"Version A headless KIELER simulation ({SYSTEM}) of {args.chart}, "
              f"{time.strftime('%Y-%m-%d %H:%M:%S %z')}",
              "KIELER messages: " + ("; ".join(warnings) if warnings else "none"), ""]
@@ -381,8 +489,7 @@ def main():
     lines += ["", f"TOTAL: {passed} passed, {len(RESULTS) - passed} failed, of {len(RESULTS)}"]
     (OUT / "A_results.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
     print("\n".join(lines))
-    if tmp:
-        shutil.rmtree(tmp, ignore_errors=True)
+    shutil.rmtree(tmp, ignore_errors=True)
     return 0 if passed == len(RESULTS) else 1
 
 

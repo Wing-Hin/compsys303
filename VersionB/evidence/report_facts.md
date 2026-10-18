@@ -11,10 +11,10 @@ All times measured on the DE2-115 with timer_1 (50 MHz timestamp) unless noted. 
 | Timer event source | timer_0 (HAL system clock, 1 ms tick), `alt_alarm` every `TIMER_PERIOD_MS` | `../COMPSYS303_Lab1/software/traffic_b/main.c` |
 | Program storage | Reset vector in SDRAM (0x00800000); program about 98 KB; on-chip RAM 30 KB (30720 B); no EPCS flash controller in the Qsys system. So the `.pof` holds only the FPGA hardware and the `.elf` is downloaded over JTAG after power-up | `../COMPSYS303_Lab1/software/traffic_b_bsp/system.h` (ALT_CPU_RESET_ADDR, ONCHIP_MEM_SPAN), `nios2-download` output |
 | Stopwatch | timer_1 timestamp, 32-bit at 50 MHz, wraps every 85.9 s (CONT bit set in `main.c`) | `main.c`, `B_C3_task3_exit.txt` line 12 |
-| ELF size | text 92628 B, data 7388 B, bss 388 B (about 98 KB) since `b3f7a54` (JTAG-console packet input; was text 92408 in D4) | `nios2-elf-size traffic_b.elf` |
+| ELF size | text 91988 B, data 7388 B, bss 388 B (about 98 KB), current build (Task 3 in ms, JTAG-console packet input); 0 build warnings | `nios2-elf-size traffic_b.elf` |
 | Build warnings | 0 (BSP and app, also from a fresh clone) | `final_test_results.md` D4 |
-| KIELER compile of the Version B chart | 0 errors, 1 warning "Instantaneous loop detected!" | `final_test_results.md` B3 |
-| Version A vs B structure | 8 time constants equal (A s x 1000 = B ms); only difference the 5-line `ArmedCheck` state | `diff_A_B.py`, `final_test_results.md` B2 |
+| KIELER compile, all 6 charts | 0 errors; "Instantaneous loop detected!" for every chart (plus clock `...SD` VariableStore notes in Version A). Caused by KIELER's expansion of during actions (B) and clocks (A): a delayed loop without them compiles silently, a real all-immediate loop is an error with no code | `kieler_warning/results.txt`, `final_test_results.md` A1, B3, B11 |
+| Version A vs B structure | all three pairs (Task 1, Task 2, Tasks 1-4): time constants equal (A s x 1000 = B ms), normalised charts identical; only difference the 6-line `ArmedCheck`/`ArmedTick` camera wake-up block in the combined A chart | `diff_A_B.py`, `final_test_results.md` B2 |
 
 ## Task 1 timing at the default 10 ms (E2b)
 
@@ -56,11 +56,14 @@ All times measured on the DE2-115 with timer_1 (50 MHz timestamp) unless noted. 
 | Dwell measured about 0.8 ms short | `main.c` prints the LEDR line before starting the dwell stopwatch | `B_E6_camera_100ms.txt` |
 | Task 3 hold | held 131 s (13097 events; the console prints 45.07 s because the stopwatch wraps at 85.9 s), then resumed at once on SW 00 | `B_C3_task3_exit.txt` line 12 |
 | First green after leaving a hold | 5997.2 ms (600 events; the exit falls between two timer events) | `B_C3_task3_exit.txt` |
-| Task 3 packets on the board | sent over the JTAG UART console (USB-Blaster cable; no RS-232 adapter needed since `b3f7a54`); C3.2-C3.6, C3.8 pass | `B_C3_jtag_packets.txt`, `final_test_results.md` C3 |
-| Valid packet from a hold | `8,3,1,8,3,1` -> 800 / 300 / 100 events, 7999.995 / 3000.068 / 999.738 ms; `4,2,1,4,2,1` -> 4000.282 / 1999.720 / 1000.219 ms | `B_C3_jtag_packets.txt` lines 270-276, 412-421 |
-| Packet during green | applied at the next R-R; the running green and yellow keep the old values | `B_C3_jtag_packets.txt` line 277 on |
-| Invalid packets | `12345,1,1,1,1,1` and `1,2,3` rejected; lights unchanged / still held; parser recovers | `B_C3_jtag_packets.txt` lines 318-334, 410-412 |
-| Two packets back to back | both committed in the same all-red, about 7 ms apart (mailbox re-checked every tick); first never visible | `B_C3_jtag_packets.txt` line 358, `final_test_results.md` finding |
+| Task 3 packet format | six values in **milliseconds** 1..9999, a 0 field is invalid; same packets in A and B (decision with reasons in `final_test_results.md`) | `final_test_results.md` decision |
+| Task 3 packets on the board | sent over the JTAG UART console (USB-Blaster cable, no RS-232 adapter); C3.2-C3.6, C3.8-C3.11 pass on the current build | `B_C3_jtag_packets.txt`, `final_test_results.md` C3 |
+| Valid packet from a hold | `8000,3000,1000,8000,3000,1000` -> hold ends, then 800 / 300 / 100 events, 7999.821 / 2999.857 / 1000.154 ms | `B_C3_jtag_packets.txt` lines 14-21 |
+| Packet during green | sent 2 s into the EW green: that green and its yellow keep 800 / 300, commit in the next R-R, then 200 / 100 / 100 | `B_C3_jtag_packets.txt` lines 22-29 |
+| Invalid packets | `1,2,3`, two packets with a 0 field, and `12345,1,1,1,1,1` rejected; lights still held / unchanged; parser recovers | `B_C3_jtag_packets.txt` lines 12-15, 30-43 |
+| Defaults by packet | `6000,2000,500,6000,2000,500` -> exactly 600 / 200 / 50 events (500.317 ms all-red) | `B_C3_jtag_packets.txt` lines 58-70 |
+| Quantisation of odd values (B) | `1234,567,89,4321,765,98` -> 124 / 57 / 9 / 433 / 77 / 10 events = ceil(T / 10 ms); 1240.059 / 569.638 / 90.389 / 4329.627 / 770.076 / 100.176 ms | `B_C3_jtag_packets.txt` lines 71-79 |
+| Two packets back to back | both committed in the same all-red; the second commit came just after the first timer event and restarted the count: all-red 101 events instead of 100 (safe direction); first packet never visible | `B_C3_jtag_packets.txt` line 48, `final_test_results.md` finding |
 
 ## Future work
 
@@ -72,10 +75,10 @@ All times measured on the DE2-115 with timer_1 (50 MHz timestamp) unless noted. 
 
 | Fact | Value | Source |
 |---|---|---|
-| PC scripted suite | 29 / 29 cases pass | `pc_suite_results.txt`, `../nios/pc_suite.c` |
-| Random run (S28) | 1,000,000 ticks: 437 LEDR changes, 90 commits, 66 rejects, 13 snapshots, 0 rule violations | `pc_suite_results.txt` |
-| 0-second time-outs (X1, extra) | 17 rule violations: yellow / all-red skipped (e.g. `140 -> 36`, `33 -> 140`) | `pc_suite_results.txt`, `final_test_results.md` |
-| Board-log checker (T0) | all 21 raw `B_*.txt` logs, 2242 phases: 0 violations | `check_board_log.py` output, `final_test_results.md` T0 |
+| PC scripted suites | combined chart 30 / 30 (`pc_suite.c`); Task 2 chart 7 / 7 (`pc_task2.c`) | `pc_suite_results.txt`, `pc_task2_results.txt` |
+| Random run (S28) | 1,000,000 ticks: 537 LEDR changes, 92 commits, 70 rejects, 14 snapshots, 0 rule violations | `pc_suite_results.txt` |
+| 0 time-outs | earlier parser accepted 0: 17 rule violations in a random run (yellow / all-red skipped, e.g. `33 -> 140`); now rejected: S30 random run with 0 fields, 216 rejects, 0 violations | `pc_suite_results.txt` S30, `final_test_results.md` finding |
+| Board-log checker (T0) | all 21 raw `B_*.txt` logs, 1935 phases: 0 violations | `check_board_log.py` output, `final_test_results.md` T0 |
 | Fresh-clone build | builds with no manual edits; same ELF section sizes | `final_test_results.md` D4 |
 | Board inputs | board-only test passed; live JTAG trace: SW0 -> 0x00001, SW17 -> 0x20000, KEY0 -> keys 0x6 (original image) | `board_input_test.txt` |
 | Test status | per test ID | `final_test_results.md` |
@@ -85,9 +88,11 @@ All times measured on the DE2-115 with timer_1 (50 MHz timestamp) unless noted. 
 | Fact | Value | Source |
 |---|---|---|
 | Simulator | KIELER's own *Netlist-based Simulation (C)* (`de.cau.cs.kieler.sccharts.simulation.netlist.c`), built from the committed chart | `versionA/run_versionA_sim.py` |
-| A-tests on the committed chart | 10 / 10 pass (after the approved ArmedTick fix; 8 / 10 before it) | `versionA/A_results.txt` |
+| A-tests | 15 / 15 pass (A2-A11, A13-A17), incl. the standalone Part 1 charts (A16, A17) | `versionA/A_results.txt` |
+| Reactions per Task 1 cycle | Version A (strict Dynamic): 6.1 per 17 s cycle (61 for 10 cycles); Version B at 10 ms: 2,050-2,200 per second, about 35,000-37,000 per cycle, 95 % of them without a timer event | `versionA/A_results.txt` A14, `B_summary.md` |
+| Reactions with Task 4 | Version A: 19 reactions for about 2 cycles with a car and a snapshot (2 clocks, 4 button ticks) | `versionA/A_results.txt` A15 |
 | Camera bug found by A10/A11 | ArmedCheck's two transitions to one target compiled to one guard; fixed with a separate ArmedTick target | `final_test_results.md`, finding |
-| Version A phase error, real-time Dynamic stepping on the PC | +0.2 .. +0.7 ms over 12 phases (always late: the host wakes after the deadline) | `versionA/A2_realtime_phases.csv`, `figures/e_versionA_vs_versionB.png` |
+| Version A phase error, real-time Dynamic stepping on the PC | +0.15 .. +0.64 ms over 12 phases (always late: the host wakes after the deadline) | `versionA/A2_realtime_phases.csv`, `figures/e_versionA_vs_versionB.png` |
 | Version B phase error at 10 ms | about -0.3 .. +0.4 ms, centred on 0 | `figures/phases.csv` (E2b) |
 | Camera dwell in Version A | exactly 1.0 s in simulated time | `final_test_results.md` A10 |
-| Task 3 commit tick wake-up | none requested (sleepT = 1000, KIELER's default) | `versionA/trace_A8_A9_task3.jsonl` |
+| Task 3 commit tick wake-up | fixed: the commit tick requests sleepT = t3 (1 s in A8); the all-red ends exactly 1.0 s later in strict Dynamic mode (before: sleepT = 1000 = no wake-up) | `versionA/trace_A8_A9_A13_task3.jsonl`, `final_test_results.md` finding |

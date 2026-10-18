@@ -1,4 +1,4 @@
-# 2026-10-19 00:50:51 +1300 | pc_suite (test B8) output | gcc 16.2.0, TrafficLight_B.c from the committed chart (TIMER_MS = 10)
+# 2026-10-19 04:46:29 +1300 | pc_suite (test B8) output | gcc 16.2.0, TrafficLight_B.c generated from TrafficLight_VersionB.sctx (Task 3 packets in ms, 0 rejected; TIMER_MS = 10)
 # Build: see the header of VersionB/nios/pc_suite.c
 pc_suite: TrafficLight_B, timer event every 7 ticks
   S1   Task 1, 5 cycles: legal sequence, exact event counts       
@@ -25,7 +25,7 @@ pc_suite: TrafficLight_B, timer event every 7 ticks
        -> PASS
   S12  Task 3 CRLF packet: same as S11                            
        -> PASS
-  S13  Task 3 five invalid packets rejected                       
+  S13  Task 3 seven invalid packets (two with 0) rejected         
        -> PASS
   S14  Task 3 garbage then valid packet                           
        -> PASS
@@ -56,11 +56,12 @@ pc_suite: TrafficLight_B, timer event every 7 ticks
   S27  Task 4 button held 50 ticks: one press                     
        -> PASS
   S28  1,000,000 random ticks: T0 rules hold                      
-      437 LEDR changes, 90 commits, 66 rejects, 13 snapshots, seed 303
+      537 LEDR changes, 92 commits, 70 rejects, 14 snapshots, seed 303
        -> PASS
   S29  No timer events: lights never change                       
        -> PASS
-  X1   (extra, informational) random run with 0-second time-outs
-      zero-second time-outs allowed: 17 rule violation(s) in 83 changes, first: tick 6296: illegal change 140 -> 36
+  S30  1,000,000 random ticks, 0 fields: rejected, rules hold     
+      493 LEDR changes, 34 commits, 216 rejects (packets with 0 fields among them), seed 303
+       -> PASS
 
-TOTAL: 29 passed, 0 failed, of 29
+TOTAL: 30 passed, 0 failed, of 30

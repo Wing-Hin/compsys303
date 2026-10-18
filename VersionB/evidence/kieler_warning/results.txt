@@ -1,0 +1,51 @@
+KIELER netlist C compile, warnings on (-w), 2026-10-19 04:44:20 +1300
+
+VersionB\evidence\kieler_warning\W1_delayed_plain.sctx
+    C code generated: Plain.c
+VersionB\evidence\kieler_warning\W2_delayed_during.sctx
+    C code generated: During.c
+    message: Instantaneous loop detected!
+VersionB\evidence\kieler_warning\W3_delayed_clock.sctx
+    C code generated: Clock.c
+    message: Instantaneous loop detected!
+    message: ValuedObject with name cSD is contained in the model but not in VariableStore.
+VersionB\evidence\kieler_warning\W4_all_immediate.sctx
+    C code generated: NO
+    message: Can't schedule from _g1 to _g2
+    message: Can't schedule from _g2 to _cg2
+    message: Can't schedule from _g2 to _g3
+    message: Can't schedule from _g2 to _g7
+    message: Can't schedule from _g3 to _g4
+    message: Can't schedule from _g4 to _cg4
+    message: Can't schedule from _g4 to _g1
+    message: Can't schedule from _g4 to _g5
+    message: Compilation failed.
+    message: Error(s) in compilation
+    message: Instantaneous loop detected!
+    message: The SCG is NOT asc-schedulable!
+Task1_VersionA.sctx
+    C code generated: Task1_TrafficLight_A.c
+    message: Instantaneous loop detected!
+    message: ValuedObject with name cSD is contained in the model but not in VariableStore.
+Task2_VersionA.sctx
+    C code generated: Task2_PedestrianTrafficLight_A.c
+    message: Instantaneous loop detected!
+    message: ValuedObject with name _Task2_PedestrianTrafficLight_A_local_wEWSD is contained in the model but not in VariableStore.
+    message: ValuedObject with name _Task2_PedestrianTrafficLight_A_local_wNSSD is contained in the model but not in VariableStore.
+    message: ValuedObject with name cSD is contained in the model but not in VariableStore.
+TrafficLight_VersionA.sctx
+    C code generated: TrafficLight_A.c
+    message: Instantaneous loop detected!
+    message: ValuedObject with name _TrafficLight_A_local_wEWSD is contained in the model but not in VariableStore.
+    message: ValuedObject with name _TrafficLight_A_local_wNSSD is contained in the model but not in VariableStore.
+    message: ValuedObject with name cSD is contained in the model but not in VariableStore.
+    message: ValuedObject with name cameraClockSD is contained in the model but not in VariableStore.
+VersionB\Task1_VersionB.sctx
+    C code generated: Task1_TrafficLight_B.c
+    message: Instantaneous loop detected!
+VersionB\Task2_VersionB.sctx
+    C code generated: Task2_PedestrianTrafficLight_B.c
+    message: Instantaneous loop detected!
+VersionB\TrafficLight_VersionB.sctx
+    C code generated: TrafficLight_B.c
+    message: Instantaneous loop detected!

@@ -195,7 +195,7 @@ Copy your current `TrafficLight_VersionA.sctx` and edit it. Line numbers refer t
 - L98: `if c * TIMER_MS >= t1 go to YR` (still the one delayed edge of the main cycle).
 - YR: entry `c = 0`, add the during, and L103 guard `c * TIMER_MS >= t2`.
 - RR1 (L105): entry `c = 0`. **No** during here: RR1 is left immediately without a trigger, and KIELER discards a during in such a state anyway.
-- L120–122, the commit: `t1 = pre(pending1) * MS_PER_S; … t6 = pre(pending6) * MS_PER_S; …; c = 0` with `const int MS_PER_S = 1000`. Packets stay in **integer seconds**, as in Version A, so the two versions accept the same packets.
+- L120–122, the commit: `t1 = pre(pending1); … t6 = pre(pending6); …; c = 0`. Packets are in integer **milliseconds** (1..9999, a 0 field is invalid) in both versions, so Version B uses them as they are and Version A divides by `MS_PER_S = 1000.0`; the two versions accept the same packets. (Until 2026-10-19 packets were in seconds and multiplied by `MS_PER_S` here; seconds could not express the 0.5 s default all-red.) The commit goes to `RRnExit`, not `RRnWait`, so the same exit guard is evaluated on the commit tick - this gives Version A its Dynamic-mode wake-up, and B stays identical.
 - L127: `!waitingConfig && c * TIMER_MS >= t3`.
 - **L130, the important one:** the all-red loop RR1Select → RR1Config → RR1Exit → RR1Wait → (next tick) RR1Select is re-entered every tick, so a `during` on RR1Wait would never fire (a non-immediate during skips the entry tick, and every tick is an entry tick there). Count on the delayed edge instead:
   ```
@@ -226,17 +226,17 @@ Compile with Netlist-based Compilation (C). Expect the same two "Instantaneous l
    ```
    : > packets.txt
    tail -f packets.txt | nios2-terminal | tee log.txt
-   printf '8,3,1,8,3,1\r\n' >> packets.txt      # from a second shell, one line per packet
+   printf '8000,3000,1000,8000,3000,1000\r\n' >> packets.txt   # from a second shell, one line per packet
    ```
    Typing into `nios2-terminal` directly also works, but Enter may send only CR: end each packet with **Ctrl+J** (LF) unless you have checked that Enter sends LF.
 2. SW1..0 = 10 (Task 3). At the next R-R the lights hold all-red (`waitingConfig`).
-3. Send `8,3,1,8,3,1` followed by CR LF. PuTTY's Enter sends only CR, which the parser ignores, so finish the packet with **Ctrl+J** (LF). A script is more reliable for repeat tests:
+3. Send `8000,3000,1000,8000,3000,1000` (milliseconds) followed by CR LF. PuTTY's Enter sends only CR, which the parser ignores, so finish the packet with **Ctrl+J** (LF). A script is more reliable for repeat tests:
    ```python
    import serial                      # pip install pyserial
    s = serial.Serial("COM5", 115200)
-   s.write(b"8,3,1,8,3,1\r\n")
+   s.write(b"8000,3000,1000,8000,3000,1000\r\n")
    ```
-4. The lights resume and the log shows phases of 8000/3000/1000 ms. Also try an invalid packet (`1,2,3\n`, which should leave the lights red), a valid packet sent during green (it applies only at the next R-R), and switching back to Task 1/2/4.
+4. The lights resume and the log shows phases of 8000/3000/1000 ms. Also try an invalid packet (`1,2,3\n` or one with a `0` field, which should leave the lights red), the defaults `6000,2000,500,6000,2000,500` (600/200/50 events), a valid packet sent during green (it applies only at the next R-R), and switching back to Task 1/2/4.
 
 `main.c` feeds at most one byte per tick, and only when `configReady` was true after the previous tick. Bytes that arrive meanwhile wait in the HAL UART driver's buffer, which holds a full packet. This is the "future UART interface must buffer bytes" item from your TASK3.md, now done. Because `d` starts zeroed, the first tick never carries a character, so the first-tick issue in TASK3_EDGE_RESULTS.md cannot occur on the board.
 

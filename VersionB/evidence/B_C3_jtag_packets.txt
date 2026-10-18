@@ -1,0 +1,99 @@
+# 2026-10-19 04:43:24 +1300 | DE2-115 Nios II, traffic_b.elf (Task 3 packets in ms, 0 rejected) | raw nios2-terminal output below
+# Settings: chart TrafficLight_VersionB.sctx TIMER_MS = 10 | main.c TIMER_PERIOD_MS = 10, CHART = 4
+# Tested: C3.2-C3.6, C3.8-C3.11 with Task 3 packets (milliseconds) over the JTAG UART console, switches SW1..0 = 10. Each packet is marked by a '# ... sent' line written by the test driver
+nios2-terminal: connected to hardware target using JTAG UART on cable
+nios2-terminal: "USB-Blaster [USB-0]", device 1, instance 0
+nios2-terminal: (Use the IDE stop button or Ctrl-C to terminate)
+
+LEDR  12 ->  20 | previous phase  4000159 us |    8208 ticks |  Version B running: timer event every 10 ms
+LEDR  -1 ->  33 | previous phase      499 us |       1 ticks |      0 timer events
+LEDR  33 ->  34 | previous phase  6000304 us |   13009 ticks |    600 timer events
+LEDR  34 ->  36 | previous phase  2000263 us |    4327 ticks |    200 timer events
+# 04:43:46 C3.3 sent: 1,2,3\r\n (3 values: must be rejected, stays at 36)
+# 04:43:54 C3.11 sent: 6000,2000,0,6000,2000,500\n6000,2000,500,6000,2000,0\n (a 0 field (comma path, then LF path): both must be rejected)
+# 04:44:03 C3.2 sent: 8000,3000,1000,8000,3000,1000\r\n (valid after the rejected ones: hold ends, 800/300/100)
+LEDR  36 ->  12 | previous phase 30530121 us |   65539 ticks |   3053 timer events
+LEDR  12 ->  20 | previous phase  7999821 us |   17154 ticks |    800 timer events
+LEDR  20 ->  36 | previous phase  2999857 us |    6426 ticks |    300 timer events
+LEDR  36 ->  33 | previous phase  1000154 us |    2142 ticks |    100 timer events
+LEDR  33 ->  34 | previous phase  7999710 us |   17290 ticks |    800 timer events
+LEDR  34 ->  36 | previous phase  3000265 us |    6438 ticks |    300 timer events
+LEDR  36 ->  12 | previous phase   999835 us |    2135 ticks |    100 timer events
+# 04:44:30 C3.5 sent: 2000,1000,1000,2000,1000,1000\n (sent 2 s into the EW green (12))
+LEDR  12 ->  20 | previous phase  8000180 us |   18223 ticks |    800 timer events
+LEDR  20 ->  36 | previous phase  2999877 us |    7072 ticks |    300 timer events
+LEDR  36 ->  33 | previous phase  1000229 us |    2142 ticks |    100 timer events
+LEDR  33 ->  34 | previous phase  1999699 us |    4324 ticks |    200 timer events
+LEDR  34 ->  36 | previous phase   999976 us |    2144 ticks |    100 timer events
+LEDR  36 ->  12 | previous phase  1000019 us |    2137 ticks |    100 timer events
+LEDR  12 ->  20 | previous phase  2000014 us |    4288 ticks |    200 timer events
+# 04:44:46 C3.6 sent: 12345,1,1,1,1,1\n (5-digit field: must be rejected, 2000,1000,1000 stays)
+LEDR  20 ->  36 | previous phase   999995 us |    2141 ticks |    100 timer events
+LEDR  36 ->  33 | previous phase  1000223 us |    2142 ticks |    100 timer events
+LEDR  33 ->  34 | previous phase  1999894 us |    4324 ticks |    200 timer events
+LEDR  34 ->  36 | previous phase   999868 us |    2144 ticks |    100 timer events
+LEDR  36 ->  12 | previous phase  1000219 us |    2137 ticks |    100 timer events
+LEDR  12 ->  20 | previous phase  1999828 us |    4286 ticks |    200 timer events
+LEDR  20 ->  36 | previous phase  1000192 us |    2141 ticks |    100 timer events
+LEDR  36 ->  33 | previous phase  1000036 us |    2142 ticks |    100 timer events
+LEDR  33 ->  34 | previous phase  1999782 us |    4323 ticks |    200 timer events
+LEDR  34 ->  36 | previous phase  1000181 us |    2145 ticks |    100 timer events
+LEDR  36 ->  12 | previous phase   999860 us |    2135 ticks |    100 timer events
+LEDR  12 ->  20 | previous phase  1999890 us |    4287 ticks |    200 timer events
+LEDR  20 ->  36 | previous phase  1000369 us |    2141 ticks |    100 timer events
+# 04:45:03 C3.8 sent: 8000,3000,1000,8000,3000,1000\n8000,3000,1000,8000,3000,1000\n (same packet twice in one write)
+LEDR  36 ->  33 | previous phase   999839 us |    2142 ticks |    100 timer events
+LEDR  33 ->  34 | previous phase  1999777 us |    4677 ticks |    200 timer events
+LEDR  34 ->  36 | previous phase  1000283 us |    2364 ticks |    100 timer events
+LEDR  36 ->  12 | previous phase  1010086 us |    2159 ticks |    101 timer events
+LEDR  12 ->  20 | previous phase  7999763 us |   17156 ticks |    800 timer events
+LEDR  20 ->  36 | previous phase  2999813 us |    6426 ticks |    300 timer events
+LEDR  36 ->  33 | previous phase  1000012 us |    2142 ticks |    100 timer events
+LEDR  33 ->  34 | previous phase  8000198 us |   17293 ticks |    800 timer events
+LEDR  34 ->  36 | previous phase  2999856 us |    6437 ticks |    300 timer events
+LEDR  36 ->  12 | previous phase  1000071 us |    2136 ticks |    100 timer events
+LEDR  12 ->  20 | previous phase  8000078 us |   17157 ticks |    800 timer events
+LEDR  20 ->  36 | previous phase  3000211 us |    6427 ticks |    300 timer events
+LEDR  36 ->  33 | previous phase   999909 us |    2141 ticks |    100 timer events
+# 04:45:44 C3.9 sent: 6000,2000,500,6000,2000,500\n (the defaults, including the 500 ms all-red)
+LEDR  33 ->  34 | previous phase  7999731 us |   18847 ticks |    800 timer events
+LEDR  34 ->  36 | previous phase  3000038 us |    7090 ticks |    300 timer events
+LEDR  36 ->  12 | previous phase   500317 us |    1068 ticks |     50 timer events
+LEDR  12 ->  20 | previous phase  5999592 us |   12867 ticks |    600 timer events
+LEDR  20 ->  36 | previous phase  2000183 us |    4284 ticks |    200 timer events
+LEDR  36 ->  33 | previous phase   500022 us |    1070 ticks |     50 timer events
+LEDR  33 ->  34 | previous phase  6000153 us |   12967 ticks |    600 timer events
+LEDR  34 ->  36 | previous phase  1999621 us |    4289 ticks |    200 timer events
+LEDR  36 ->  12 | previous phase   500359 us |    1068 ticks |     50 timer events
+LEDR  12 ->  20 | previous phase  5999997 us |   12864 ticks |    600 timer events
+LEDR  20 ->  36 | previous phase  1999900 us |    4283 ticks |    200 timer events
+LEDR  36 ->  33 | previous phase   499951 us |    1070 ticks |     50 timer events
+# 04:46:21 C3.10 sent: 1234,567,89,4321,765,98\n (odd ms values: Version B rounds up to whole 10 ms events)
+LEDR  33 ->  34 | previous phase  5999870 us |   14021 ticks |    600 timer events
+LEDR  34 ->  36 | previous phase  1999954 us |    4727 ticks |    200 timer events
+LEDR  36 ->  12 | previous phase    90389 us |     192 ticks |      9 timer events
+LEDR  12 ->  20 | previous phase  4329627 us |    9286 ticks |    433 timer events
+LEDR  20 ->  36 | previous phase   770076 us |    1648 ticks |     77 timer events
+LEDR  36 ->  33 | previous phase   100176 us |     213 ticks |     10 timer events
+LEDR  33 ->  34 | previous phase  1240059 us |    2678 ticks |    124 timer events
+LEDR  34 ->  36 | previous phase   569638 us |    1220 ticks |     57 timer events
+LEDR  36 ->  12 | previous phase    90161 us |     191 ticks |      9 timer events
+LEDR  12 ->  20 | previous phase  4330137 us |    9287 ticks |    433 timer events
+LEDR  20 ->  36 | previous phase   770145 us |    1648 ticks |     77 timer events
+LEDR  36 ->  33 | previous phase    99795 us |     212 ticks |     10 timer events
+# 04:46:42 driver finished: C3.3 PASS, C3.11 PASS, C3.2 PASS, C3.4 PASS, C3.5 PASS, C3.6 PASS, C3.8 PASS, C3.9 PASS, C3.10 PASS
+LEDR  33 ->  34 | previous phase  1239961 us |    2678 ticks |    124 timer events
+LEDR  34 ->  36 | previous phase   569906 us |    1222 ticks |     57 timer events
+LEDR  36 ->  12 | previous phase    90221 us |     191 ticks |      9 timer events
+LEDR  12 ->  20 | previous phase  4330107 us |    9284 ticks |    433 timer events
+LEDR  20 ->  36 | previous phase   769704 us |    1647 ticks |     77 timer events
+LEDR  36 ->  33 | previous phase   100236 us |     213 ticks |     10 timer events
+LEDR  33 ->  34 | previous phase  1239711 us |    2677 ticks |    124 timer events
+LEDR  34 ->  36 | previous phase   570207 us |    1222 ticks |     57 timer events
+LEDR  36 ->  12 | previous phase    89780 us |     190 ticks |      9 timer events
+LEDR  12 ->  20 | previous phase  4330246 us |    9284 ticks |    433 timer events
+LEDR  20 ->  36 | previous phase   769923 us |    1647 ticks |     77 timer events
+LEDR  36 ->  33 | previous phase    99760 us |     212 ticks |     10 timer events
+LEDR  33 ->  34 | previous phase  1240248 us |    2679 ticks |    124 timer events
+LEDR  34 ->  36 | previous phase   570056 us |    1221 ticks |     57 timer events
+LEDR  36 ->  12 | previous phase    90029 us |     191 ticks |      9 timer events

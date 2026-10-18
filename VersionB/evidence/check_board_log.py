@@ -19,9 +19,10 @@ against the shared pass criteria of the test plan (Part II, section 0):
      Exempt: an all-red phase that is LONGER than nominal (Task 3 hold or a
      configuration commit) - it is reported, not failed.
      After the first such commit the expected time-outs switch to the values
-     of an optional header line "# Config: t1,t2,t3,t4,t5,t6" (seconds).
+     of an optional header line "# Config: t1,t2,t3,t4,t5,t6" (milliseconds).
      Task 3 packets sent during a run are marked "# ... sent ...: <packet>" (escapes
-     written as \r and \n). From each VALID packet (six 1-4 digit fields) on a
+     written as \r and \n). From each VALID packet (six 1-4 digit fields in
+     milliseconds, none of them 0 - the chart's own validity rule) on a
      marker line, every later phase may also last that packet's count; a
      longer all-red is still exempt, a shorter one still fails.
 
@@ -111,8 +112,8 @@ def sent_packets(line):
     out = []
     for packet in m.group(1).split("\\n"):
         packet = packet.replace("\\r", "")
-        if PACKET_RE.match(packet):
-            out.append(dict(zip(NAMES, (int(x) * 1000 for x in packet.split(",")))))
+        if PACKET_RE.match(packet) and all(int(x) > 0 for x in packet.split(",")):
+            out.append(dict(zip(NAMES, (int(x) for x in packet.split(",")))))  # milliseconds
     return out
 
 
@@ -127,7 +128,7 @@ def check(path, defaults):
                 timer_ms = int(m.group(1))
             m = CONFIG_RE.match(line.strip())
             if m:
-                config = [int(x) * 1000 for x in m.group(1).replace(" ", "").split(",") if x]
+                config = [int(x) for x in m.group(1).replace(" ", "").split(",") if x]  # milliseconds
     if timer_ms is None:
         return [f"{path.name}: no TIMER_MS in header"], [], 0
 

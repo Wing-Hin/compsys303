@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-COMPSYS 303 - structural diff of Version A against Version B (test B2).
+COMPSYS 303 - structural diff of every Version A chart against its Version B twin (test B2).
 
 Version A (TrafficLight_VersionA.sctx) times with SCCharts clocks in seconds;
 Version B (VersionB/TrafficLight_VersionB.sctx) counts timer events in integer
@@ -15,8 +15,10 @@ Normalisation (each rule is a documented A/B timing difference):
     scaling A by 1000, then both become "const T NAME"
   * A "clock X = 0.0" and B "int X = 0" (timer counters) -> "TIMER X"
   * A cameraClock is B camCount
-  * B "X * TIMER_MS >= Y" -> "X >= Y";  B "pre(pendingN) * MS_PER_S" -> "pre(pendingN)"
-  * B-only event counting lines removed: TIMER_MS, MS_PER_S, input timerTick,
+  * B "X * TIMER_MS >= Y" -> "X >= Y";  A "pre(pendingN) / MS_PER_S" -> "pre(pendingN)"
+    (Task 3 packets are milliseconds: A converts them to seconds, B uses them as they are)
+  * A-only line removed: MS_PER_S
+  * B-only event counting lines removed: TIMER_MS, input timerTick,
     "during if timerTick do X++", "if timerTick ... do X++ go to S"
 
 Usage:  python diff_A_B.py        (exit code 0 = only expected differences)
@@ -32,13 +34,19 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-A_FILE = ROOT / "TrafficLight_VersionA.sctx"
-B_FILE = ROOT / "VersionB" / "TrafficLight_VersionB.sctx"
+# Every Version A chart and its Version B twin (Task 1, Task 2, Tasks 1-4 combined).
+PAIRS = [
+    (ROOT / "Task1_VersionA.sctx", ROOT / "VersionB" / "Task1_VersionB.sctx"),
+    (ROOT / "Task2_VersionA.sctx", ROOT / "VersionB" / "Task2_VersionB.sctx"),
+    (ROOT / "TrafficLight_VersionA.sctx", ROOT / "VersionB" / "TrafficLight_VersionB.sctx"),
+]
 
 CONST_RE = re.compile(r"^const (float|int) (\w+) = ([\d.]+)$")
+A_ONLY = [
+    re.compile(r"^const float MS_PER_S = [\d.]+$"),
+]
 B_ONLY = [
     re.compile(r"^const int TIMER_MS = \d+$"),
-    re.compile(r"^const int MS_PER_S = \d+$"),
     re.compile(r"^input\s+bool timerTick$"),
     re.compile(r"^during if timerTick do \w+\+\+$"),
     re.compile(r"^if timerTick( && \w+)? do \w+\+\+ go to \w+$"),
@@ -62,7 +70,9 @@ def normalise(lines, version, consts):
     for line in lines:
         if version == "B" and any(p.match(line) for p in B_ONLY):
             continue
-        line = re.sub(r"^scchart TrafficLight_[AB] \{", "scchart TrafficLight {", line)
+        if version == "A" and any(p.match(line) for p in A_ONLY):
+            continue
+        line = re.sub(r"^scchart (\w+)_[AB] \{", r"scchart \1 {", line)
         m = CONST_RE.match(line)
         if m and m.group(2).isupper() and not m.group(2).startswith(("NS_", "EW_", "ASCII", "MAX_")):
             value = float(m.group(3)) * (1000 if version == "A" else 1)
@@ -74,7 +84,7 @@ def normalise(lines, version, consts):
         line = re.sub(r"\b(output )?int " + TIMER_VARS + r" = 0\b", r"TIMER \2", line)
         line = re.sub(r"\boutput (float|int) t1 =", "output T t1 =", line)
         line = re.sub(r"(\w+) \* TIMER_MS >=", r"\1 >=", line)
-        line = re.sub(r"(pre\(pending\d\)) \* MS_PER_S", r"\1", line)
+        line = re.sub(r"(pre\(pending\d\)) / MS_PER_S", r"\1", line)
         line = re.sub(r"\b(\d+)\.0\b", r"\1", line)          # 0.0 -> 0
         out.append(line)
     return out
@@ -106,11 +116,20 @@ def strip_a_only(lines):
 
 
 def main():
+    results = [compare(a_file, b_file) for a_file, b_file in PAIRS]
+    print("=" * 70)
+    for (a_file, b_file), ok in zip(PAIRS, results):
+        print(f"{a_file.name:28s} vs {b_file.name:28s} {'PASS' if ok else 'FAIL'}")
+    return 0 if all(results) else 1
+
+
+def compare(A_FILE, B_FILE):
     ca, cb = {}, {}
     a, removed = strip_a_only(normalise(clean(A_FILE), "A", ca))
     b = normalise(clean(B_FILE), "B", cb)
 
     ok = True
+    print("=" * 70)
     print(f"A: {A_FILE.relative_to(ROOT)}  ({len(a)} normalised lines)")
     print(f"B: {B_FILE.relative_to(ROOT)}  ({len(b)} normalised lines)\n")
 
@@ -131,7 +150,7 @@ def main():
     print(f"\n{len(changed)} unexpected differing line(s).")
     ok &= not changed
     print("RESULT:", "PASS (only the expected timing and ArmedCheck/ArmedTick differences)" if ok else "FAIL")
-    return 0 if ok else 1
+    return ok
 
 
 if __name__ == "__main__":

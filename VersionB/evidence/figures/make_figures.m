@@ -3,8 +3,8 @@
 %
 % Run from this folder:   matlab -batch "make_figures"
 % Writes a_measured_vs_intended.png, b_phase_error.png, c_ticks_per_event.png,
-% d_camera_dwell.png. Figure (e) (Version A vs B) needs Version A traces, which
-% are not in the repository yet.
+% d_camera_dwell.png and e_versionA_vs_versionB.png; (e) also reads
+% ../versionA/A2_realtime_phases.csv (written by ../versionA/run_versionA_sim.py).
 %
 % AI Use Declaration: The design and all design decisions were made by Harold and Lucas.
 % This plotting script was written with the assistance of a generative AI tool (Claude,

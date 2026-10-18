@@ -1,0 +1,13 @@
+// KIELER warning experiment W1 (not part of the controller): a two-state loop
+// closed by ONE delayed transition, no during actions, no clocks.
+// Expected: compiles with no message.
+scchart Plain {
+    input bool t
+    output int L = 0
+    region R {
+        initial state A { entry do L = 1 }
+        immediate if t go to B
+        state B { entry do L = 2 }
+        if t go to A
+    }
+}

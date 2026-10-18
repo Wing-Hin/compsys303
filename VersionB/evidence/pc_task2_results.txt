@@ -1,0 +1,19 @@
+# 2026-10-19 04:46:29 +1300 | pc_task2 output | gcc 16.2.0, Task2_PedestrianTrafficLight_B.c generated from VersionB/Task2_VersionB.sctx (TIMER_MS = 10)
+# Build: see the header of VersionB/nios/pc_task2.c
+pc_task2: Task2_PedestrianTrafficLight_B, timer event every 7 ticks
+  P1  no presses, 3 cycles: 600/200/50 events                   
+       -> PASS
+  P2  NS press in R-G: next G-R 97 for 400, then 33 for 200     
+       -> PASS
+  P3  EW press in G-R: next R-G 140 for 400, then 12 for 200    
+       -> PASS
+  P4  both pressed together: both walks                         
+       -> PASS
+  P5  button held across a green: one walk                      
+       -> PASS
+  P6  NS press in its own green: walk at the next G-R           
+       -> PASS
+  P7  300,000 ticks of periodic presses: legal changes only     
+       -> PASS
+
+TOTAL: 7 passed, 0 failed, of 7

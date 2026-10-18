@@ -1,0 +1,15 @@
+// KIELER warning experiment W3 (not part of the controller): the same loop as W1
+// (ONE delayed transition), timed with a Timed SCCharts clock - the Version A
+// style. Shows that the clock expansion gives the same warning (plus the
+// informational cSD VariableStore note), while the code is still generated.
+@ClocksUseSD
+scchart Clock {
+    output int L = 0
+    clock c = 0.0
+    region R {
+        initial state A { entry do c = 0.0; L = 1 }
+        immediate if c >= 2.0 go to B
+        state B { entry do c = 0.0; L = 2 }
+        if c >= 2.0 go to A
+    }
+}
