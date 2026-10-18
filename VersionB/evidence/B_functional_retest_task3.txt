@@ -1,0 +1,11 @@
+# 2026-10-19 00:04:04 +1300 | DE2-115 Nios II, traffic_b.elf | raw nios2-terminal output below
+# Settings: chart TrafficLight_VersionB.sctx TIMER_MS = 10 | main.c TIMER_PERIOD_MS = 10, CHART = 4
+# Tested: Part 2 retest f: Task 3 (SW1 up SW0 down, confirmed switches = 0x00002 by JTAG read 00:03:36), expect hold at LEDR 36; no COM port on the PC, so the UART packet test is pending (no cable)
+nios2-terminal: connected to hardware target using JTAG UART on cable
+nios2-terminal: "USB-Blaster [USB-0]", device 1, instance 0
+nios2-terminal: (Use the IDE stop button or Ctrl-C to terminate)
+
+LEDR  12 ->  20 | previous phase  6000036 us |   13067 ticks |  Version B running: timer event every 10 ms
+LEDR  -1 ->  33 | previous phase      467 us |       1 ticks |      0 timer events
+LEDR  33 ->  34 | previous phase  5999996 us |   13134 ticks |    600 timer events
+LEDR  34 ->  36 | previous phase  2000164 us |    4377 ticks |    200 timer events

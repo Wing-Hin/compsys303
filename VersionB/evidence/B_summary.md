@@ -78,7 +78,45 @@ File `B_E4_rescale.txt`: chart TIMER_MS = 10, main.c TIMER_PERIOD_MS = 20, 19 ph
 
 All phases: 248720 ticks, 5700 timer events, 2182 ticks/s, 43.64 ticks per event, 97.71 % of ticks without a timer event.
 
-## Part 2: functional-check log
+## E6 (i): camera dwell, vehicle enters in green, 100 ms
+
+File `B_E6_camera_100ms.txt`: chart TIMER_MS = 100, main.c TIMER_PERIOD_MS = 100, 74 phases, 1 program start(s).
+
+| Phase | LEDR | Intended ms (events) | n | Mean ms | Min ms | Max ms | Mean error ms | Jitter ms | Mean ticks | Mean events | Ticks/event | Idle share |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| G-R  NS green | 33->34 | 6000 (60) | 13 | 6000.029 | 5999.620 | 6000.241 | 0.029 | 0.621 | 13064.8 | 60.0 | 217.75 | 99.54 % |
+| Y-R  NS yellow | 34->36 | 2000 (20) | 13 | 1999.920 | 1999.560 | 2000.347 | -0.080 | 0.787 | 4362.4 | 20.0 | 218.12 | 99.54 % |
+| R-R  after NS | 36->12 | 500 (5) | 12 | 499.995 | 499.785 | 500.272 | -0.005 | 0.487 | 1083.2 | 5.0 | 216.63 | 99.54 % |
+| R-G  EW green | 12->20 | 6000 (60) | 12 | 6000.006 | 5999.689 | 6000.359 | 0.006 | 0.670 | 13067.2 | 60.0 | 217.79 | 99.54 % |
+| R-Y  EW yellow | 20->36 | 2000 (20) | 12 | 1999.990 | 1999.680 | 2000.319 | -0.010 | 0.639 | 4353.8 | 20.0 | 217.69 | 99.54 % |
+| R-R  after EW | 36->33 | 500 (5) | 12 | 500.049 | 499.705 | 500.350 | 0.049 | 0.645 | 1087.3 | 5.0 | 217.47 | 99.54 % |
+
+All phases: 461651 ticks, 2120 timer events, 2178 ticks/s, 217.76 ticks per event, 99.54 % of ticks without a timer event.
+
+| Camera dwell | n | Mean ms | Min ms | Max ms | Jitter ms | Chart dwell ms |
+|---|---|---|---|---|---|---|
+| measured | 4 | 999.226 | 999.074 | 999.309 | 0.235 | 1000 |
+
+## E6 (ii): camera dwell, vehicle enters during yellow, 100 ms
+
+File `B_E6_camera_100ms_yellow.txt`: chart TIMER_MS = 100, main.c TIMER_PERIOD_MS = 100, 21 phases, 2 program start(s).
+
+| Phase | LEDR | Intended ms (events) | n | Mean ms | Min ms | Max ms | Mean error ms | Jitter ms | Mean ticks | Mean events | Ticks/event | Idle share |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| G-R  NS green | 33->34 | 6000 (60) | 4 | 6000.054 | 5999.685 | 6000.213 | 0.054 | 0.528 | 13091.5 | 60.0 | 218.19 | 99.54 % |
+| Y-R  NS yellow | 34->36 | 2000 (20) | 4 | 2000.091 | 1999.917 | 2000.313 | 0.091 | 0.396 | 4366.0 | 20.0 | 218.30 | 99.54 % |
+| R-R  after NS | 36->12 | 500 (5) | 4 | 499.909 | 499.772 | 499.999 | -0.091 | 0.227 | 1083.0 | 5.0 | 216.60 | 99.54 % |
+| R-G  EW green | 12->20 | 6000 (60) | 3 | 6000.019 | 5999.987 | 6000.061 | 0.019 | 0.074 | 13063.0 | 60.0 | 217.72 | 99.54 % |
+| R-Y  EW yellow | 20->36 | 2000 (20) | 3 | 1999.949 | 1999.714 | 2000.234 | -0.051 | 0.520 | 4338.3 | 20.0 | 216.92 | 99.54 % |
+| R-R  after EW | 36->33 | 500 (5) | 3 | 499.965 | 499.696 | 500.314 | -0.035 | 0.618 | 1083.3 | 5.0 | 216.67 | 99.54 % |
+
+All phases: 129616 ticks, 595 timer events, 2178 ticks/s, 217.84 ticks per event, 99.54 % of ticks without a timer event.
+
+| Camera dwell | n | Mean ms | Min ms | Max ms | Jitter ms | Chart dwell ms |
+|---|---|---|---|---|---|---|
+| measured | 3 | 946.525 | 936.105 | 959.501 | 23.396 | 1000 |
+
+## Part 2: functional-check log (first attempt)
 
 File `B_functional_checks.txt`: chart TIMER_MS = 10, main.c TIMER_PERIOD_MS = 10, 229 phases, 3 program start(s).
 
@@ -92,6 +130,57 @@ File `B_functional_checks.txt`: chart TIMER_MS = 10, main.c TIMER_PERIOD_MS = 10
 | R-R  after EW | 36->33 | 500 (50) | 37 | 499.984 | 499.563 | 500.229 | -0.016 | 0.666 | 1082.8 | 50.0 | 21.66 | 95.38 % |
 
 All phases: 1421767 ticks, 65200 timer events, 2181 ticks/s, 21.81 ticks per event, 95.41 % of ticks without a timer event.
+
+## Part 2 retest a-b: Task 2 pedestrian walks
+
+File `B_functional_retest.txt`: chart TIMER_MS = 10, main.c TIMER_PERIOD_MS = 10, 45 phases, 1 program start(s).
+
+| Phase | LEDR | Intended ms (events) | n | Mean ms | Min ms | Max ms | Mean error ms | Jitter ms | Mean ticks | Mean events | Ticks/event | Idle share |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| G-R  NS green | 33->34 | 6000 (600) | 5 | 6000.020 | 5999.745 | 6000.230 | 0.020 | 0.485 | 13110.0 | 600.0 | 21.85 | 95.42 % |
+| G-R  NS green (after walk) | 33->34 | 2000 (200) | 2 | 2000.164 | 2000.064 | 2000.263 | 0.164 | 0.199 | 4360.0 | 200.0 | 21.80 | 95.41 % |
+| G-R  NS walk | 97->33 | 4000 (400) | 2 | 3999.889 | 3999.734 | 4000.043 | -0.111 | 0.309 | 8727.5 | 400.0 | 21.82 | 95.42 % |
+| Y-R  NS yellow | 34->36 | 2000 (200) | 7 | 2000.040 | 1999.624 | 2000.221 | 0.040 | 0.597 | 4376.0 | 200.0 | 21.88 | 95.43 % |
+| R-R  after NS | 36->12 | 500 (50) | 6 | 499.992 | 499.877 | 500.267 | -0.008 | 0.390 | 1088.3 | 50.0 | 21.77 | 95.41 % |
+| R-R  after NS (EW walk next) | 36->140 | 500 (50) | 1 | 499.887 | 499.887 | 499.887 | -0.113 | 0.000 | 1088.0 | 50.0 | 21.76 | 95.40 % |
+| R-G  EW green | 12->20 | 6000 (600) | 6 | 5999.832 | 5999.612 | 6000.270 | -0.168 | 0.658 | 13106.2 | 600.0 | 21.84 | 95.42 % |
+| R-G  EW green (after walk) | 12->20 | 2000 (200) | 1 | 2000.164 | 2000.164 | 2000.164 | 0.164 | 0.000 | 4374.0 | 200.0 | 21.87 | 95.43 % |
+| R-G  EW walk | 140->12 | 4000 (400) | 1 | 3999.980 | 3999.980 | 3999.980 | -0.020 | 0.000 | 8715.0 | 400.0 | 21.79 | 95.41 % |
+| R-Y  EW yellow | 20->36 | 2000 (200) | 7 | 2000.055 | 1999.807 | 2000.348 | 0.055 | 0.541 | 4360.0 | 200.0 | 21.80 | 95.41 % |
+| R-R  after EW | 36->33 | 500 (50) | 5 | 500.124 | 499.979 | 500.331 | 0.124 | 0.352 | 1090.4 | 50.0 | 21.81 | 95.41 % |
+| R-R  after EW (NS walk next) | 36->97 | 500 (50) | 2 | 499.851 | 499.595 | 500.108 | -0.149 | 0.513 | 1088.5 | 50.0 | 21.77 | 95.41 % |
+
+All phases: 259850 ticks, 11900 timer events, 2184 ticks/s, 21.84 ticks per event, 95.42 % of ticks without a timer event.
+
+## Part 2 retest c-e: Task 4 camera
+
+File `B_functional_retest_task4.txt`: chart TIMER_MS = 10, main.c TIMER_PERIOD_MS = 10, 93 phases, 1 program start(s).
+
+| Phase | LEDR | Intended ms (events) | n | Mean ms | Min ms | Max ms | Mean error ms | Jitter ms | Mean ticks | Mean events | Ticks/event | Idle share |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| G-R  NS green | 33->34 | 6000 (600) | 16 | 6000.003 | 5999.737 | 6000.390 | 0.003 | 0.653 | 13074.8 | 600.0 | 21.79 | 95.41 % |
+| Y-R  NS yellow | 34->36 | 2000 (200) | 16 | 1999.954 | 1999.588 | 2000.321 | -0.046 | 0.733 | 4361.2 | 200.0 | 21.81 | 95.41 % |
+| R-R  after NS | 36->12 | 500 (50) | 16 | 500.039 | 499.652 | 500.283 | 0.039 | 0.631 | 1083.3 | 50.0 | 21.67 | 95.38 % |
+| R-G  EW green | 12->20 | 6000 (600) | 15 | 5999.969 | 5999.757 | 6000.403 | -0.031 | 0.646 | 13053.6 | 600.0 | 21.76 | 95.40 % |
+| R-Y  EW yellow | 20->36 | 2000 (200) | 15 | 1999.997 | 1999.719 | 2000.319 | -0.003 | 0.600 | 4349.1 | 200.0 | 21.75 | 95.40 % |
+| R-R  after EW | 36->33 | 500 (50) | 15 | 500.041 | 499.799 | 500.225 | 0.041 | 0.426 | 1087.1 | 50.0 | 21.74 | 95.40 % |
+
+All phases: 573657 ticks, 26350 timer events, 2177 ticks/s, 21.77 ticks per event, 95.41 % of ticks without a timer event.
+
+| Camera dwell | n | Mean ms | Min ms | Max ms | Jitter ms | Chart dwell ms |
+|---|---|---|---|---|---|---|
+| measured | 1 | 999.207 | 999.207 | 999.207 | 0.000 | 1000 |
+
+## Part 2 retest f: Task 3 hold
+
+File `B_functional_retest_task3.txt`: chart TIMER_MS = 10, main.c TIMER_PERIOD_MS = 10, 2 phases, 1 program start(s).
+
+| Phase | LEDR | Intended ms (events) | n | Mean ms | Min ms | Max ms | Mean error ms | Jitter ms | Mean ticks | Mean events | Ticks/event | Idle share |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| G-R  NS green | 33->34 | 6000 (600) | 1 | 5999.996 | 5999.996 | 5999.996 | -0.004 | 0.000 | 13134.0 | 600.0 | 21.89 | 95.43 % |
+| Y-R  NS yellow | 34->36 | 2000 (200) | 1 | 2000.164 | 2000.164 | 2000.164 | 0.164 | 0.000 | 4377.0 | 200.0 | 21.89 | 95.43 % |
+
+All phases: 17511 ticks, 800 timer events, 2189 ticks/s, 21.89 ticks per event, 95.43 % of ticks without a timer event.
 
 ## Restore check: defaults after experiments
 
@@ -107,3 +196,24 @@ File `B_restored_10ms.txt`: chart TIMER_MS = 10, main.c TIMER_PERIOD_MS = 10, 27
 | R-R  after EW | 36->33 | 500 (50) | 4 | 499.929 | 499.775 | 500.283 | -0.071 | 0.508 | 1092.2 | 50.0 | 21.84 | 95.42 % |
 
 All phases: 167802 ticks, 7650 timer events, 2193 ticks/s, 21.93 ticks per event, 95.44 % of ticks without a timer event.
+
+## Restore check: defaults after E6
+
+File `B_restored_10ms_after_E6.txt`: chart TIMER_MS = 10, main.c TIMER_PERIOD_MS = 10, 9 phases, 1 program start(s).
+
+| Phase | LEDR | Intended ms (events) | n | Mean ms | Min ms | Max ms | Mean error ms | Jitter ms | Mean ticks | Mean events | Ticks/event | Idle share |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| G-R  NS green | 33->34 | 6000 (600) | 2 | 6000.191 | 5999.915 | 6000.467 | 0.191 | 0.552 | 13106.5 | 600.0 | 21.84 | 95.42 % |
+| Y-R  NS yellow | 34->36 | 2000 (200) | 2 | 1999.931 | 1999.917 | 1999.946 | -0.069 | 0.029 | 4370.0 | 200.0 | 21.85 | 95.42 % |
+| R-R  after NS | 36->12 | 500 (50) | 2 | 499.981 | 499.978 | 499.983 | -0.019 | 0.005 | 1085.0 | 50.0 | 21.70 | 95.39 % |
+| R-G  EW green | 12->20 | 6000 (600) | 1 | 6000.029 | 6000.029 | 6000.029 | 0.029 | 0.000 | 13067.0 | 600.0 | 21.78 | 95.41 % |
+| R-Y  EW yellow | 20->36 | 2000 (200) | 1 | 2000.039 | 2000.039 | 2000.039 | 0.039 | 0.000 | 4356.0 | 200.0 | 21.78 | 95.41 % |
+| R-R  after EW | 36->33 | 500 (50) | 1 | 500.082 | 500.082 | 500.082 | 0.082 | 0.000 | 1088.0 | 50.0 | 21.76 | 95.40 % |
+
+All phases: 55634 ticks, 2550 timer events, 2182 ticks/s, 21.82 ticks per event, 95.42 % of ticks without a timer event.
+
+## B_functional_retest_summary
+
+File `B_functional_retest_summary.txt`: chart TIMER_MS = 10, main.c TIMER_PERIOD_MS = 10, 0 phases, 0 program start(s).
+
+No phase lines found.

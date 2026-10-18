@@ -63,9 +63,14 @@ EXPERIMENTS = {
     "B_E2_100ms": "E2c: 100 ms timer",
     "B_E3_300ms": "E3: 300 ms timer (quantisation)",
     "B_E4_rescale": "E4: chart 10 ms, main.c 20 ms (rescale)",
-    "B_E6_camera_100ms": "E6: camera dwell, 100 ms",
-    "B_functional_checks": "Part 2: functional-check log",
+    "B_E6_camera_100ms": "E6 (i): camera dwell, vehicle enters in green, 100 ms",
+    "B_E6_camera_100ms_yellow": "E6 (ii): camera dwell, vehicle enters during yellow, 100 ms",
+    "B_functional_checks": "Part 2: functional-check log (first attempt)",
+    "B_functional_retest": "Part 2 retest a-b: Task 2 pedestrian walks",
+    "B_functional_retest_task4": "Part 2 retest c-e: Task 4 camera",
+    "B_functional_retest_task3": "Part 2 retest f: Task 3 hold",
     "B_restored_10ms": "Restore check: defaults after experiments",
+    "B_restored_10ms_after_E6": "Restore check: defaults after E6",
 }
 
 

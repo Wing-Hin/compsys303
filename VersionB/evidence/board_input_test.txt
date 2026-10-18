@@ -1,0 +1,74 @@
+# 2026-10-18 23:07:48 +1300 | DE2-115 board input isolation test (board vs Nios II design)
+# Settings: traffic_b.elf on COMPSYS303_Lab1_time_limited.sof, chart TIMER_MS = 10, main.c TIMER_PERIOD_MS = 10, CHART = 4
+# Tested: do SW/KEY reach the FPGA at all? board_test.sof (no Nios II): LEDR = SW, LEDG[3:0] = pressed KEY[3:0], LEDG8 blinks
+
+Step 0 (traffic_b running, before board_test):
+  User: LEDR0-LEDR5 physically show the traffic-light cycle -> YES (outputs from the Nios II to the LEDs work)
+  Prior JTAG reads under traffic_b: SWITCHES data = 0x0003FFFC (unchanged when switches moved), KEYS edgecapture = 0x0 (no press latched), KEYS data = 0x7
+  Prior Lab 1 Hello_lab1.elf (unmodified): stayed at "Count: 0" while KEY0 was pressed
+
+Step 1 board_test changes before compile:
+  board_test.qsf had no CLOCK_50 pin; added PIN_Y2, 3.3-V LVTTL (same as COMPSYS303_Lab1.qsf), with user approval
+
+Step 1 compile (quartus_sh --flow compile board_test, Quartus Prime Lite 18.1):
+  Full Compilation successful: 0 errors, 17 warnings.
+  Critical warnings: no board_test.sdc (x2), "Timing requirements not met" (x3) - default 1 GHz
+    constraint without an .sdc; Fmax CLOCK_50 = 345.42 MHz (250 MHz restricted) >> 50 MHz, so harmless.
+  Notable warnings: LEDG[7:4] stuck at GND (intended, assigned 4'b0000).
+  Pin report: SW[0]=AB28, SW[1]=AC28, SW[17]=Y23, KEY[0..3]=M23/M21/N21/R24, CLOCK_50=Y2,
+    LEDR[0]=G19, LEDR[1]=F19, LEDR[17]=H15, LEDG[8]=F17 (all match COMPSYS303_Lab1.qsf).
+
+Step 1 program: 23:10:36 quartus_pgm -c USB-Blaster -m jtag -o "p;output_files/board_test.sof" -> Configuration succeeded (EP4CE115F29, JTAG ID 0x020F70DD, checksum 0x00564017). Tethered Lab 1 session ended first (Ctrl-C).
+
+Step 1 observations on board_test.sof (23:14:29, reported by user):
+  (a) LEDG8 blinks ~1.5 Hz                         -> PASS (image running, CLOCK_50 OK)
+  (b) SW0 -> LEDR0, SW1 -> LEDR1, SW17 -> LEDR17   -> all follow, PASS
+      all switches down -> no red LED lit          -> PASS (no stuck-high inputs)
+  (c) KEY0..KEY3 held -> LEDG0..LEDG3 respectively -> all four match, PASS
+  Conclusion: the DE2-115 switches and keys reach the FPGA pins correctly; the board is fine.
+  The fault is between the FPGA pins and the Nios II PIOs in the COMPSYS303_Lab1 image.
+
+Step 2 (board fine -> Nios II design path). 23:16 re-programmed COMPSYS303_Lab1_time_limited.sof (tethered),
+23:16 nios2-download -g traffic_b.elf, nios2-terminal attached.
+User set: SW1 up, SW0 and SW2-SW17 down, pressed KEY0 once. JTAG read 23:17:5x via nios2-gdb-server
+(bit-31 uncached addresses, 3 samples):
+  SWITCHES data (0x01011090)   = 0x00000000  x3   (expected 0x00000002)
+  KEYS data (0x010110A0)       = 0x00000007  x3   (all released - plausible)
+  KEYS edgecapture (0x010110AC)= 0x00000000  x3   (expected bit 0 set after the KEY0 press)
+  KEYS irqmask (0x010110A8)    = 0x00000000       (traffic_b does not enable key IRQs)
+  LEDS_RED data (0x01011080)   = 0x00000014 (20, R-Y) - matches the console, so the read path works
+  Console: lights kept cycling through R-R (task 3 hold never happened) -> software also saw SW1 = 0.
+Earlier reads (22:31, 22:38): SWITCHES = 0x0003FFFC, edgecapture = 0x0.
+Note: in every read so far SW bits 1..0 = 0 and no key edge has ever been captured, whatever the user reported.
+Static checks: .sof compiled from C:/intelFPGA_lite/18.1/COMPSYS303_Lab1 (db/lab1.bdf); its .qsys/.sopcinfo/.sof are
+identical to the VersionB copy; SW/KEY wiring in the compiled .bdf matches the VersionB .bdf; all SW/KEY pins have fan-out.
+
+Step 2b (23:23-23:44) rebuild + diagnostic image, VersionB\lab1_rebuild (original .sof untouched):
+  Clean rebuild from nios2_system.qsys (fresh qsys-generate) + VersionB COMPSYS303_Lab1.bdf/.qsf: 0 errors;
+    address map identical to the original image; DRAM_CLK and LCD_BLON now bind to their pins.
+  Snapshot read on the clean rebuild (23:29): switches 0x0, key edges 0x0.
+  Diagnostic variant (COMPSYS303_Lab1_diag.v: same nios2_system connections + HEX0 = hardware mirror of SW[3:0], KEY[2:0]):
+    User: HEX0 dark with all switches down; SW0 -> top segment; KEY0 -> bottom-left; KEY1 -> top-left (pins reach the fabric).
+    Snapshot 23:37: switches 0x0, keys 0x7, key edgecapture 0x3 (first time any key edge was ever latched).
+    Live stream, 1 sample/s from 23:40:50 (nios2-elf-gdb, uncached reads):
+      t=0-162 s   switches=0x00000 keys=0x7
+      t=163-167 s switches=0x00001  (SW0 up)
+      t=170-173 s switches=0x20000  (SW17 up)
+      t=178-181 s keys=0x6          (KEY0 held)
+    -> In the rebuilt/diagnostic image the Nios II PIOs read SW and KEY correctly.
+  Note: an earlier user reply said the values changed when the trace still showed no change (t=0-29 s);
+    snapshot reads depend on the switch state at the moment of reading, so they are not conclusive on their own.
+
+Step 2c (23:45-23:48) ORIGINAL COMPSYS303_Lab1_time_limited.sof (checksum 0x008CFF92) re-tethered, same live stream:
+      t=0-59 s    switches=0x00000 keys=0x7 edges=0x0
+      t=60-63 s   switches=0x00001  (SW0 up)
+      t=67-70 s   switches=0x20000  (SW17 up)
+      t=73-76 s   keys=0x6, edgecapture 0x0 -> 0x1  (KEY0 held)
+    (User reported "nothing happened": nothing on the board changes during this test because the CPU is
+     paused and this image has no HEX mirror; only the values in the terminal change.)
+
+CONCLUSION: the board, the original Lab 1 FPGA image, the PIOs and the JTAG read path all work. The Nios II
+reads SW and KEY correctly whenever they are actually set/pressed at the time of the read. The earlier
+"stuck" results (0x3FFFC, 0x0, no key edges) are not reproducible with a continuous trace; they are explained
+by the inputs not being in the reported state at the moment of each snapshot (or presses made before a
+re-download reset the PIO). No design change is needed. lab1_rebuild/ is diagnostic only and not required.

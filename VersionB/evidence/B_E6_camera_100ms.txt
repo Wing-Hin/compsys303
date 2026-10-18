@@ -1,0 +1,104 @@
+# 2026-10-19 00:09:35 +1300 | DE2-115 Nios II, traffic_b.elf | raw nios2-terminal output below
+# Settings: chart TrafficLight_VersionB.sctx TIMER_MS = 100 | main.c TIMER_PERIOD_MS = 100, CHART = 4
+# Tested: E6: Task 4 (switches = 0x00003 by JTAG read 00:08:28) at 100 ms; (i) vehicle enters in green x3, photographed at yellow; (ii) vehicle enters during yellow x3
+nios2-terminal: connected to hardware target using JTAG UART on cable
+nios2-terminal: "USB-Blaster [USB-0]", device 1, instance 0
+nios2-terminal: (Use the IDE stop button or Ctrl-C to terminate)
+
+LEDR  36 ->  12 | previous phase   500319 us |    1086 ticks |  Version B running: timer event every 100 ms
+LEDR  -1 ->  33 | previous phase      470 us |       1 ticks |      0 timer events
+LEDR  33 ->  34 | previous phase  6000008 us |   13124 ticks |     60 timer events
+LEDR  34 ->  36 | previous phase  2000016 us |    4373 ticks |     20 timer events
+LEDR  36 ->  12 | previous phase   499885 us |    1085 ticks |      5 timer events
+LEDR  12 ->  20 | previous phase  6000283 us |   13068 ticks |     60 timer events
+LEDR  20 ->  36 | previous phase  1999680 us |    4354 ticks |     20 timer events
+LEDR  36 ->  33 | previous phase   500026 us |    1089 ticks |      5 timer events
+LEDR  33 ->  34 | previous phase  5999989 us |   13094 ticks |     60 timer events
+LEDR  34 ->  36 | previous phase  1999900 us |    4373 ticks |     20 timer events
+LEDR  36 ->  12 | previous phase   500272 us |    1086 ticks |      5 timer events
+LEDR  12 ->  20 | previous phase  6000011 us |   13065 ticks |     60 timer events
+LEDR  20 ->  36 | previous phase  1999896 us |    4354 ticks |     20 timer events
+LEDR  36 ->  33 | previous phase   500133 us |    1088 ticks |      5 timer events
+LEDR  33 ->  34 | previous phase  5999698 us |   13092 ticks |     60 timer events
+LEDR  34 ->  36 | previous phase  2000347 us |    4374 ticks |     20 timer events
+LEDR  36 ->  12 | previous phase   499992 us |    1085 ticks |      5 timer events
+LEDR  12 ->  20 | previous phase  5999689 us |   13067 ticks |     60 timer events
+LEDR  20 ->  36 | previous phase  2000071 us |    4355 ticks |     20 timer events
+LEDR  36 ->  33 | previous phase   499977 us |    1088 ticks |      5 timer events
+LEDR  33 ->  34 | previous phase  6000236 us |   13093 ticks |     60 timer events
+LEDR  34 ->  36 | previous phase  2000099 us |    4373 ticks |     20 timer events
+LEDR  36 ->  12 | previous phase   499809 us |    1085 ticks |      5 timer events
+LEDR  12 ->  20 | previous phase  6000139 us |   13068 ticks |     60 timer events
+LEDR  20 ->  36 | previous phase  1999941 us |    4354 ticks |     20 timer events
+LEDR  36 ->  33 | previous phase   499790 us |    1087 ticks |      5 timer events
+LEDR  33 ->  34 | previous phase  6000186 us |   13094 ticks |     60 timer events
+LEDR  34 ->  36 | previous phase  1999848 us |    4373 ticks |     20 timer events
+LEDR  36 ->  12 | previous phase   499940 us |    1085 ticks |      5 timer events
+LEDR  12 ->  20 | previous phase  5999925 us |   13067 ticks |     60 timer events
+LEDR  20 ->  36 | previous phase  2000193 us |    4354 ticks |     20 timer events
+LEDR  36 ->  33 | previous phase   500226 us |    1088 ticks |      5 timer events
+LEDR  33 ->  34 | previous phase  5999620 us |   13093 ticks |     60 timer events
+LEDR  34 ->  36 | previous phase  2000052 us |    4373 ticks |     20 timer events
+LEDR  36 ->  12 | previous phase   499909 us |    1085 ticks |      5 timer events
+LEDR  12 ->  20 | previous phase  6000359 us |   13070 ticks |     60 timer events
+LEDR  20 ->  36 | previous phase  1999782 us |    4350 ticks |     20 timer events
+LEDR  36 ->  33 | previous phase   500026 us |    1087 ticks |      5 timer events
+LEDR  33 ->  34 | previous phase  6000241 us |   13093 ticks |     60 timer events
+LEDR  34 ->  36 | previous phase  1999957 us |    4373 ticks |     20 timer events
+LEDR  36 ->  12 | previous phase   499785 us |    1085 ticks |      5 timer events
+LEDR  12 ->  20 | previous phase  6000036 us |   13068 ticks |     60 timer events
+LEDR  20 ->  36 | previous phase  1999979 us |    4355 ticks |     20 timer events
+LEDR  36 ->  33 | previous phase   500213 us |    1087 ticks |      5 timer events
+Camera activated
+LEDR  33 ->  34 | previous phase  6000197 us |   12988 ticks |     60 timer events
+Snapshot taken
+  camera dwell measured: 999074 us
+Vehicle left
+LEDR  34 ->  36 | previous phase  1999560 us |    4339 ticks |     20 timer events
+LEDR  36 ->  12 | previous phase   499880 us |    1085 ticks |      5 timer events
+LEDR  12 ->  20 | previous phase  6000275 us |   13069 ticks |     60 timer events
+LEDR  20 ->  36 | previous phase  1999748 us |    4353 ticks |     20 timer events
+LEDR  36 ->  33 | previous phase   500350 us |    1088 ticks |      5 timer events
+Camera activated
+LEDR  33 ->  34 | previous phase  5999768 us |   12997 ticks |     60 timer events
+Snapshot taken
+  camera dwell measured: 999294 us
+LEDR  34 ->  36 | previous phase  1999877 us |    4338 ticks |     20 timer events
+Vehicle left
+LEDR  36 ->  12 | previous phase   500240 us |    1078 ticks |      5 timer events
+LEDR  12 ->  20 | previous phase  5999969 us |   13065 ticks |     60 timer events
+LEDR  20 ->  36 | previous phase  2000085 us |    4353 ticks |     20 timer events
+LEDR  36 ->  33 | previous phase   499924 us |    1087 ticks |      5 timer events
+Camera activated
+LEDR  33 ->  34 | previous phase  6000131 us |   12995 ticks |     60 timer events
+Snapshot taken
+  camera dwell measured: 999309 us
+LEDR  34 ->  36 | previous phase  1999739 us |    4338 ticks |     20 timer events
+Vehicle left
+LEDR  36 ->  12 | previous phase   500055 us |    1077 ticks |      5 timer events
+LEDR  12 ->  20 | previous phase  5999825 us |   13064 ticks |     60 timer events
+LEDR  20 ->  36 | previous phase  2000026 us |    4353 ticks |     20 timer events
+LEDR  36 ->  33 | previous phase   500285 us |    1085 ticks |      5 timer events
+Camera activated
+LEDR  33 ->  34 | previous phase  6000072 us |   12990 ticks |     60 timer events
+Snapshot taken
+  camera dwell measured: 999226 us
+LEDR  34 ->  36 | previous phase  1999750 us |    4338 ticks |     20 timer events
+Vehicle left
+LEDR  36 ->  12 | previous phase   500209 us |    1077 ticks |      5 timer events
+LEDR  12 ->  20 | previous phase  5999741 us |   13069 ticks |     60 timer events
+LEDR  20 ->  36 | previous phase  2000158 us |    4355 ticks |     20 timer events
+LEDR  36 ->  33 | previous phase   499937 us |    1087 ticks |      5 timer events
+LEDR  33 ->  34 | previous phase  6000202 us |   13093 ticks |     60 timer events
+LEDR  34 ->  36 | previous phase  1999842 us |    4373 ticks |     20 timer events
+LEDR  36 ->  12 | previous phase   499967 us |    1085 ticks |      5 timer events
+LEDR  12 ->  20 | previous phase  5999818 us |   13067 ticks |     60 timer events
+LEDR  20 ->  36 | previous phase  2000319 us |    4355 ticks |     20 timer events
+LEDR  36 ->  33 | previous phase   499705 us |    1087 ticks |      5 timer events
+LEDR  33 ->  34 | previous phase  6000028 us |   13096 ticks |     60 timer events
+LEDR  34 ->  36 | previous phase  1999967 us |    4373 ticks |     20 timer events
+
+JTAG connection interrupted!
+
+
+nios2-terminal: exiting due to I/O error communicating with target

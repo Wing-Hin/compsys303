@@ -1,0 +1,43 @@
+# 2026-10-19 00:17:42 +1300 | DE2-115 Nios II, traffic_b.elf | raw nios2-terminal output below
+# Settings: chart TrafficLight_VersionB.sctx TIMER_MS = 100 | main.c TIMER_PERIOD_MS = 100, CHART = 4
+# Tested: E6 part (ii): Task 4 at 100 ms, vehicle enters DURING yellow x3. Re-tethered .sof at 00:17:31 after the OpenCore Plus tether broke at 00:13 (JTAG interruption); part (i) is in B_E6_camera_100ms.txt
+nios2-terminal: connected to hardware target using JTAG UART on cable
+nios2-terminal: "USB-Blaster [USB-0]", device 1, instance 0
+nios2-terminal: (Use the IDE stop button or Ctrl-C to terminate)
+
+Version B running: timer event every 100 ms
+Version B running: timer event every 100 ms
+LEDR  -1 ->  33 | previous phase      472 us |       1 ticks |      0 timer events
+LEDR  33 ->  34 | previous phase  6000213 us |   13126 ticks |     60 timer events
+LEDR  34 ->  36 | previous phase  1999978 us |    4373 ticks |     20 timer events
+LEDR  36 ->  12 | previous phase   499872 us |    1085 ticks |      5 timer events
+LEDR  12 ->  20 | previous phase  5999987 us |   13067 ticks |     60 timer events
+Camera activated
+Snapshot taken
+  camera dwell measured: 959501 us
+LEDR  20 ->  36 | previous phase  2000234 us |    4328 ticks |     20 timer events
+LEDR  36 ->  33 | previous phase   499696 us |    1081 ticks |      5 timer events
+Vehicle left
+LEDR  33 ->  34 | previous phase  6000133 us |   13073 ticks |     60 timer events
+Camera activated
+Snapshot taken
+  camera dwell measured: 943968 us
+LEDR  34 ->  36 | previous phase  1999917 us |    4344 ticks |     20 timer events
+LEDR  36 ->  12 | previous phase   499999 us |    1077 ticks |      5 timer events
+Vehicle left
+LEDR  12 ->  20 | previous phase  6000010 us |   13055 ticks |     60 timer events
+Camera activated
+Snapshot taken
+  camera dwell measured: 936105 us
+LEDR  20 ->  36 | previous phase  1999898 us |    4334 ticks |     20 timer events
+LEDR  36 ->  33 | previous phase   500314 us |    1082 ticks |      5 timer events
+Vehicle left
+LEDR  33 ->  34 | previous phase  5999685 us |   13073 ticks |     60 timer events
+LEDR  34 ->  36 | previous phase  2000313 us |    4374 ticks |     20 timer events
+LEDR  36 ->  12 | previous phase   499993 us |    1085 ticks |      5 timer events
+LEDR  12 ->  20 | previous phase  6000061 us |   13067 ticks |     60 timer events
+LEDR  20 ->  36 | previous phase  1999714 us |    4353 ticks |     20 timer events
+LEDR  36 ->  33 | previous phase   499884 us |    1087 ticks |      5 timer events
+LEDR  33 ->  34 | previous phase  6000185 us |   13094 ticks |     60 timer events
+LEDR  34 ->  36 | previous phase  2000155 us |    4373 ticks |     20 timer events
+LEDR  36 ->  12 | previous phase   499772 us |    1085 ticks |      5 timer events

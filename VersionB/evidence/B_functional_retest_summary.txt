@@ -1,0 +1,47 @@
+# 2026-10-19 00:05 +1300 | Part 2 functional checks (retest) - PASS/FAIL summary
+# Settings: original COMPSYS303_Lab1_time_limited.sof (tethered), traffic_b.elf, chart TIMER_MS = 10, main.c TIMER_PERIOD_MS = 10, CHART = 4
+# Method: switch setting confirmed by a JTAG read of the switches PIO before each logged run; proof = raw console logs below.
+
+a  Task 2, KEY0 during R-G -> NS walk at next G-R for 400 events          PASS   (B_functional_retest.txt, switches = 0x00001)
+     LEDR  36 ->  97 | previous phase   499595 us |    1087 ticks |     50 timer events
+     LEDR  97 ->  33 | previous phase  4000043 us |    8724 ticks |    400 timer events
+     LEDR  33 ->  34 | previous phase  2000263 us |    4356 ticks |    200 timer events   (green total 600 events)
+   Note: the walk bit is set on entry to the green, so the console shows 36 -> 97 rather than 33 -> 97.
+
+b  Task 2, KEY1 during G-R -> EW walk at next R-G for 400 events          PASS   (B_functional_retest.txt)
+     LEDR  36 -> 140 | previous phase   499887 us |    1088 ticks |     50 timer events
+     LEDR 140 ->  12 | previous phase  3999980 us |    8715 ticks |    400 timer events
+     LEDR  12 ->  20 | previous phase  2000164 us |    4374 ticks |    200 timer events
+
+c  Task 4, vehicle enters during green -> camera at yellow, snapshot ~1 s  PASS   (B_functional_retest_task4.txt, switches = 0x00003)
+     Camera activated
+     Snapshot taken
+       camera dwell measured: 999207 us
+
+d  Task 4, KEY2 again -> vehicle leaves                                    PASS   (B_functional_retest_task4.txt)
+     Vehicle left
+
+e  Task 4, enter and leave within 1 s during yellow -> no snapshot         PASS   (B_functional_retest_task4.txt)
+     LEDR  33 ->  34 | previous phase  5999834 us |   13089 ticks |    600 timer events
+     Camera activated
+     Vehicle left
+     (no "Snapshot taken" afterwards)
+
+f  Task 3, lights hold at all-red after the next R-R                       PASS   (B_functional_retest_task3.txt, switches = 0x00002)
+     LEDR  34 ->  36 | previous phase  2000164 us |    4377 ticks |    200 timer events
+     (no further transition for ~55 s; a normal R-R lasts 500 ms)
+   Task 3 UART packets (8,3,1,8,3,1 accepted / 1,2,3 rejected): PENDING - no RS-232 cable / no COM port on this PC.
+
+Board-input investigation: see board_input_test.txt (board, FPGA image and PIOs confirmed working by a live JTAG trace).
+
+E6  camera dwell at TIMER_MS = TIMER_PERIOD_MS = 100 (Task 4)
+  (i)  vehicle enters in green, photographed at yellow start: expected 1000 ms  PASS  (B_E6_camera_100ms.txt)
+       dwell measured: 999074, 999294, 999309, 999226 us (4 rounds) = 10 events of 100 ms
+       (~0.8 ms short: main.c prints the "LEDR 33 -> 34" line before starting the dwell stopwatch)
+  (ii) vehicle enters during yellow: expected 900-1000 ms                      PASS  (B_E6_camera_100ms_yellow.txt)
+       dwell measured: 959501, 943968, 936105 us (3 rounds) = 9 full periods + the part-period before the first event
+  Note: the OpenCore Plus tether broke at 00:13 (JTAG interruption, quartus_pgm Error 209059), which stopped the
+  Nios II; part (ii) was run after re-tethering at 00:17:31.
+Extra: B_functional_retest_task3 -> Task 4 change while holding in Task 3: the hold lasted 55.3 s (14120 events),
+  then the lights resumed at "36 -> 12" when SW0 was flipped up (seen on the console before the E6 run).
+Restore after E6: TIMER_MS = 10, TIMER_PERIOD_MS = 10, chart regenerated, rebuilt, board confirmed (B_restored_10ms_after_E6.txt).

@@ -1,0 +1,24 @@
+# 2026-10-19 00:19:28 +1300 | DE2-115 Nios II, traffic_b.elf | raw nios2-terminal output below
+# Settings: chart TrafficLight_VersionB.sctx TIMER_MS = 10 | main.c TIMER_PERIOD_MS = 10, CHART = 4
+# Tested: Restore check after E6: defaults TIMER_MS = 10 and TIMER_PERIOD_MS = 10, chart regenerated; switches at Task 4, no buttons
+nios2-terminal: connected to hardware target using JTAG UART on cable
+nios2-terminal: "USB-Blaster [USB-0]", device 1, instance 0
+nios2-terminal: (Use the IDE stop button or Ctrl-C to terminate)
+
+LEDR  12 ->  20 | previous phase  6000055 us |   13069 ticks |  Version B running: timer event every 10 ms
+LEDR  -1 ->  33 | previous phase      496 us |       1 ticks |      0 timer events
+LEDR  33 ->  34 | previous phase  6000467 us |   13121 ticks |    600 timer events
+LEDR  34 ->  36 | previous phase  1999946 us |    4370 ticks |    200 timer events
+LEDR  36 ->  12 | previous phase   499983 us |    1085 ticks |     50 timer events
+LEDR  12 ->  20 | previous phase  6000029 us |   13067 ticks |    600 timer events
+LEDR  20 ->  36 | previous phase  2000039 us |    4356 ticks |    200 timer events
+LEDR  36 ->  33 | previous phase   500082 us |    1088 ticks |     50 timer events
+LEDR  33 ->  34 | previous phase  5999915 us |   13092 ticks |    600 timer events
+LEDR  34 ->  36 | previous phase  1999917 us |    4370 ticks |    200 timer events
+LEDR  36 ->  12 | previous phase   499978 us |    1085 ticks |     50 timer events
+LEDR  12 ->  20 | previous phase  6000146 us |   13067 ticks |    600 timer events
+LEDR  20 ->  36 | previous phase  1999736 us |    4355 ticks |    200 timer events
+LEDR  36 ->  33 | previous phase   499982 us |    1088 ticks |     50 timer events
+LEDR  33 ->  34 | previous phase  6000125 us |   13090 ticks |    600 timer events
+LEDR  34 ->  36 | previous phase  1999884 us |    4370 ticks |    200 timer events
+LEDR  36 ->  12 | previous phase   500034 us |    1085 ticks |     50 timer events
