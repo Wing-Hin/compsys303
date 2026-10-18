@@ -20,6 +20,10 @@ against the shared pass criteria of the test plan (Part II, section 0):
      configuration commit) - it is reported, not failed.
      After the first such commit the expected time-outs switch to the values
      of an optional header line "# Config: t1,t2,t3,t4,t5,t6" (seconds).
+     Task 3 packets sent during a run are marked "# ... sent ...: <packet>" (escapes
+     written as \r and \n). From each VALID packet (six 1-4 digit fields) on a
+     marker line, every later phase may also last that packet's count; a
+     longer all-red is still exempt, a shorter one still fails.
 
 Lines before the first "Version B running" of each program start are skipped
 (they are left over in the JTAG UART FIFO from the previous run), as are the
@@ -45,6 +49,9 @@ PHASE_RE = re.compile(
     r"\s*(\d+)\s+ticks\s*\|\s*(\d+)\s+timer events\s*$")
 SETTINGS_RE = re.compile(r"TIMER_MS = (\d+).*TIMER_PERIOD_MS = (\d+)")
 CONFIG_RE = re.compile(r"^#\s*Config:\s*([\d\s,]+)$")
+SENT_RE = re.compile(r"^#.*\bsent\b[^:]*:\s*(\S+)")   # "sent: p" or "sent during green (33): p"
+PACKET_RE = re.compile(r"^\d{1,4}(,\d{1,4}){5}$")
+NAMES = ("T1", "T2", "T3", "T4", "T5", "T6")
 START_MARK = "Version B running"
 
 ALLOWED_VALUES = {33, 34, 36, 12, 20, 97, 140}
@@ -91,6 +98,24 @@ def safety(v):
     return None
 
 
+def show(exps):
+    """One expected count as before, several as '600 or 800'."""
+    return " or ".join(str(e) for e in sorted(exps))
+
+
+def sent_packets(line):
+    """Time-outs (ms) of every valid packet on a '# ... sent:' marker line."""
+    m = SENT_RE.match(line.strip())
+    if not m:
+        return []
+    out = []
+    for packet in m.group(1).split("\\n"):
+        packet = packet.replace("\\r", "")
+        if PACKET_RE.match(packet):
+            out.append(dict(zip(NAMES, (int(x) * 1000 for x in packet.split(",")))))
+    return out
+
+
 def check(path, defaults):
     lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
     timer_ms = None
@@ -112,13 +137,22 @@ def check(path, defaults):
     prev = None          # previous transition (a, b) within this program start
     violations, notes, checked = [], [], 0
 
+    alts = []            # time-outs of the valid packets sent so far in this log
+
     def expected(name, walk):
-        ev = math.ceil(timeouts[name] / timer_ms)
-        if walk:
-            ev -= math.ceil(timeouts["WALK_TIME"] / timer_ms)
-        return ev
+        """Allowed event counts: current time-outs, or any packet sent so far."""
+        out = set()
+        for t in [timeouts] + alts:
+            ev = math.ceil(t[name] / timer_ms)
+            if walk:
+                ev -= math.ceil(t["WALK_TIME"] / timer_ms)
+            out.add(ev)
+        return out
 
     for no, line in enumerate(lines, 1):
+        for packet in sent_packets(line):
+            alts.append(dict(defaults, **packet))
+            committed = True
         if START_MARK in line:
             started, prev = True, None
             continue
@@ -147,23 +181,25 @@ def check(path, defaults):
         # Event count of the phase that just ended.
         if a == 36:
             rr = "T3" if prev and prev[1] == 36 and prev[0] == 34 else "T6"
-            exp = expected(rr, False)
-            if events > exp:
-                notes.append(f"{where}: all-red lasted {events} events (> {exp}): Task 3 hold or "
+            exps = expected(rr, False)
+            if events in exps:
+                pass
+            elif events > min(exps):
+                notes.append(f"{where}: all-red lasted {events} events (> {show(exps)}): Task 3 hold or "
                              f"configuration commit - exempt")
                 if config and not committed:
-                    timeouts.update(dict(zip(("T1", "T2", "T3", "T4", "T5", "T6"), config)))
+                    timeouts.update(dict(zip(NAMES, config)))
                     notes.append(f"{where}: expected time-outs switched to # Config: {config} ms")
                 committed = committed or config is not None
-            elif events < exp:
-                violations.append(f"{where}: all-red {rr} lasted {events} events, expected {exp}")
+            else:
+                violations.append(f"{where}: all-red {rr} lasted {events} events, expected {show(exps)}")
         else:
             name = PHASE_TIMEOUT.get((a, b))
             if name:
                 walk = WALK_BEFORE.get((a, b)) == prev
-                exp = expected(name, walk)
-                if events != exp:
-                    violations.append(f"{where}: {a} -> {b} after {events} events, expected {exp}"
+                exps = expected(name, walk)
+                if events not in exps:
+                    violations.append(f"{where}: {a} -> {b} after {events} events, expected {show(exps)}"
                                       + (" (green remainder after walk)" if walk else ""))
         prev = (a, b)
     return violations, notes, checked

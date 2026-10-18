@@ -71,6 +71,8 @@ EXPERIMENTS = {
     "B_functional_retest_task3": "Part 2 retest f: Task 3 hold",
     "B_restored_10ms": "Restore check: defaults after experiments",
     "B_restored_10ms_after_E6": "Restore check: defaults after E6",
+    "B_C3_jtag_packets": "C3: Task 3 packets over the JTAG console (four time-out sets in one log: "
+                         "intended / error columns refer to the defaults, see final_test_results.md C3)",
 }
 
 

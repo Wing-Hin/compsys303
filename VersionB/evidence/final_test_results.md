@@ -15,7 +15,7 @@ checked by `check_board_log.py` (T0).
 
 | ID | P | Status | Evidence |
 |---|---|---|---|
-| T0 | M | PASS | `check_board_log.py` over all 20 raw board logs (after Part 6): 1854 phases, 0 violations. Negative test with a synthetic bad log: all 6 violation kinds detected (count, change, value, safety, short all-red, 97->34 without a commit); a synthetic Task 3 commit log is accepted. |
+| T0 | M | PASS | `check_board_log.py` over all 21 raw board logs (after C3 over the JTAG console): 2242 phases, 0 violations. Negative test with a synthetic bad log: all 6 violation kinds detected (count, change, value, safety, short all-red, 97->34 without a commit); a synthetic Task 3 commit log is accepted. The checker also reads the `# ... sent ...: <packet>` markers: a phase may last the count of any **valid** packet sent earlier in that log (approved rule change, needed once packets were applied on the board). Re-run negative test: wrong counts still fail without a marker, after a valid packet and after an invalid (ignored) packet; a short all-red still fails. |
 
 ## A. Version A - simulator regression
 
@@ -51,7 +51,7 @@ checked by `check_board_log.py` (T0).
 
 The Task 3 parser accepts `0` as a value. With a 0 s yellow or all-red the lights skip that phase
 (observed in a random run: `33 -> 36`, `12 -> 36`, `140 -> 36` = green straight to red;
-`33 -> 140` = NS green to EW green in one tick). Only reachable by sending zeros over RS-232.
+`33 -> 140` = NS green to EW green in one tick). Only reachable by sending zeros over RS-232 or the JTAG console.
 **Decision: documented as a limitation** (every Task 3 value must be at least 1 s); no chart change.
 A parser change that rejects 0 remains possible with the group's OK.
 
@@ -69,7 +69,12 @@ A parser change that rejects 0 remains possible with the group's OK.
 | C2.5 | S | PASS | `B_C2_task2.txt`: KEY0 during an NS green without a walk -> that green `33 -> 34` after 600 (no walk), next NS green `36 -> 97`. Note: a press while the walk light is already on is absorbed by the running walk (nsServed is updated when the walk ends). |
 | C2.6 | M | PASS | `B_C2_task2.txt`: request made, Task 1 active (0 walks in lines 245-297; Task 1 tick rate), SW0 back up -> first Task 2 NS green `36 -> 97`, `97 -> 33` after 400 events. |
 | C3.1 | M | PASS | `B_functional_retest_task3.txt` (switches 0x00002): no change after `34 -> 36` for ~55 s (the end of that hold was seen on an unlogged console only); re-confirmed in `B_C3_task3_exit.txt`: hold of 13097 events (131 s), left at once on SW 00. |
-| C3.2-C3.6, C3.8 | M/S | PENDING - needs cable | No RS-232 / USB-serial adapter: this PC has no COM port. Parser behaviour covered on the PC by S11-S19. |
+| C3.2 | M | PASS | `B_C3_jtag_packets.txt` (switches 0x00002; packets typed into the JTAG UART console over the USB-Blaster cable, `main.c` commit `b3f7a54`): held at 36, `8,3,1,8,3,1\r\n` -> hold ends (line 270: 1994 events, 19.9 s), then 800/300/100 events (7999.995 / 3000.068 / 999.738 ms) every phase. |
+| C3.3 | M | PASS | Same log, after re-entering Task 3 (SW1 off ~15 s, on again; held at 36 from line 408): `1,2,3\r\n` -> no change for 30 s (lines 410-411); rejected. |
+| C3.4 | M | PASS | Same log line 411-412: then `4,2,1,4,2,1\r\n` -> hold ends (6329 events, 63.3 s), then 400/200/100 events (4000.282 / 1999.720 / 1000.219 ms): the parser recovered after the rejected packet. |
+| C3.5 | S | PASS | Same log line 277: `2,1,1,2,1,1\n` (LF only) sent during the EW green (12): that green and its yellow kept 800/300, the commit happened in the next R-R (100 events), the next green lasted 200 events. Matches S16. |
+| C3.6 | S | PASS | Same log line 318: `12345,1,1,1,1,1\n` -> 200/100/100 unchanged over 4 all-reds (lines 319-334); rejected, and the parser kept working (C3.8 next). |
+| C3.8 | S | PASS | Same log line 342: `8,3,1,8,3,1\n8,3,1,8,3,1\n` in one write -> 800/300/100 from the next all-red on, no rejection, no stray values. Extra C3.8b (line 358): `2,1,1,2,1,1\n8,3,1,8,3,1\n` -> both committed in the **same** all-red (see finding below); 8/3/1 in effect afterwards. |
 | C3.7 | M | PASS | `B_C3_task3_exit.txt` (switches 0x00002): hold at 36 (13097 events = 131 s), SW 00 -> left at once, then 600/200/50/600/200/50 with the default (last committed) time-outs. The first green after the hold is 5997.2 ms: leaving the hold happens between two timer events (same quantisation as E6 ii). |
 | C4.1 | M | PASS | `B_functional_retest_task4.txt`: Camera activated, Snapshot taken, dwell 999207 us. |
 | C4.2 | M | PASS | same file: `Vehicle left`. |
@@ -93,7 +98,7 @@ A parser change that rejects 0 remains possible with the group's OK.
 | D3 | PENDING | After D1. |
 | D4 | PASS | `git clone` of commit `774e0a2` into `%TEMP%\cs303_fresh`; Nios II command-line tools only: `nios2-bsp-generate-files --settings=settings.bsp --bsp-dir=.`, `make` (BSP), `make` (traffic_b): 0 errors, 0 warnings, **no manual edits**. Regeneration changed only "Generated:" timestamps and the recorded `BspGeneratedLocation`. ELF section sizes identical to the working-copy build (text 92408, data 7388, bss 388). The Quartus hardware rebuild needs `qsys-generate` first (generated `nios2_system/` HDL is not tracked) - part of D1. |
 | D5 | PASS | `B_D5_fresh_clone.txt`: the fresh-clone ELF ran Task 1 (switches 0x00000): 22 phases at 600/200/50 events, within 0.4 ms; T0 clean. |
-| D6 | PASS | Top-level `README.md`: SW1..0 = task, KEY0/KEY1/KEY2, KEY3 = reset, LEDR bits, RS-232 115200 8N1 + packet format, JTAG console, "Version A = simulator, Version B = board", known limitations. Group members' full names and UPIs still to fill in. |
+| D6 | PASS | Top-level `README.md`: SW1..0 = task, KEY0/KEY1/KEY2, KEY3 = reset, LEDR bits, RS-232 115200 8N1 + packet format, JTAG console (also accepts Task 3 packets, `b3f7a54`), "Version A = simulator, Version B = board", known limitations, group members' full names and UPIs. |
 | D7 | PASS | Commit `774e0a2`: AI Use Declaration in all 5 charts, both `main.c` (identical), `pc_test.c`, `pc_suite.c`, `pc_suite_print.h`, `analyse_logs.py`, `check_board_log.py`, `diff_A_B.py`, `board_test.v`, `COMPSYS303_Lab1_diag.v`. The KIELER-generated `TrafficLight_B.c/.h` carry none (regenerated files; to be stated in the README). |
 | D8 | PENDING | `VersionB/make_submission.ps1 -DryRun`: 216 files, 1.8 MB (5 charts - no 6th exists; traffic_b + traffic_b_bsp without obj/; sopcinfo; README; evidence incl. figures). Fails loudly until the `.pof` exists; group number N still needed. |
 | D9 | PASS | Dry-run list contains no `db/`, `incremental_db/`, `.metadata/`, `obj/`, `Hello_lab1*`, `_to_delete/`, board_test outputs or `TASK3_EDGE_RESULTS.md`. |
@@ -112,6 +117,18 @@ A parser change that rejects 0 remains possible with the group's OK.
 * Task 3 values are integer seconds and must be at least 1 s (0 s skips yellow/all-red, see X1).
 * Leaving a Task 3 hold, or a car arriving mid-yellow, happens between two timer events, so the first
   phase (or the camera dwell) afterwards is up to one timer period short (10 ms at 10 ms, 100 ms in E6).
+* Task 3 bytes are read from RS-232 first, then from the JTAG console: send a packet on one port at a
+  time (two packets arriving together would have their bytes mixed).
+
+## Finding: two Task 3 packets in one all-red (C3.8b)
+
+During an all-red the chart re-checks the mailbox every tick (`RR1Wait -> RR1Select -> RR1Config`). With two
+packets back to back, the first is committed when the all-red starts, which frees the mailbox; the parser then
+reads the second (about 15 ticks, ~7 ms) and it is committed in the **same** all-red. The first packet's values
+are never visible in a green. Nothing is lost: the second packet can only be read after the first is committed.
+This is within the brief (values change only in R-R; the newest valid packet wins). A commit later in an
+all-red resets its count (`c = 0`), so that all-red lasts longer than t3 (the safe direction); in C3.8b the
+second commit came before the first timer event, so the all-red was still exactly 100 events. No change made.
 
 ## Finding (fixed): Version A camera never took a snapshot (A10, A11)
 

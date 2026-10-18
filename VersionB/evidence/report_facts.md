@@ -11,7 +11,7 @@ All times measured on the DE2-115 with timer_1 (50 MHz timestamp) unless noted. 
 | Timer event source | timer_0 (HAL system clock, 1 ms tick), `alt_alarm` every `TIMER_PERIOD_MS` | `../COMPSYS303_Lab1/software/traffic_b/main.c` |
 | Program storage | Reset vector in SDRAM (0x00800000); program about 98 KB; on-chip RAM 30 KB (30720 B); no EPCS flash controller in the Qsys system. So the `.pof` holds only the FPGA hardware and the `.elf` is downloaded over JTAG after power-up | `../COMPSYS303_Lab1/software/traffic_b_bsp/system.h` (ALT_CPU_RESET_ADDR, ONCHIP_MEM_SPAN), `nios2-download` output |
 | Stopwatch | timer_1 timestamp, 32-bit at 50 MHz, wraps every 85.9 s (CONT bit set in `main.c`) | `main.c`, `B_C3_task3_exit.txt` line 12 |
-| ELF size | text 92408 B, data 7388 B, bss 388 B (about 96 KB) | `final_test_results.md` D4 |
+| ELF size | text 92628 B, data 7388 B, bss 388 B (about 98 KB) since `b3f7a54` (JTAG-console packet input; was text 92408 in D4) | `nios2-elf-size traffic_b.elf` |
 | Build warnings | 0 (BSP and app, also from a fresh clone) | `final_test_results.md` D4 |
 | KIELER compile of the Version B chart | 0 errors, 1 warning "Instantaneous loop detected!" | `final_test_results.md` B3 |
 | Version A vs B structure | 8 time constants equal (A s x 1000 = B ms); only difference the 5-line `ArmedCheck` state | `diff_A_B.py`, `final_test_results.md` B2 |
@@ -56,7 +56,11 @@ All times measured on the DE2-115 with timer_1 (50 MHz timestamp) unless noted. 
 | Dwell measured about 0.8 ms short | `main.c` prints the LEDR line before starting the dwell stopwatch | `B_E6_camera_100ms.txt` |
 | Task 3 hold | held 131 s (13097 events; the console prints 45.07 s because the stopwatch wraps at 85.9 s), then resumed at once on SW 00 | `B_C3_task3_exit.txt` line 12 |
 | First green after leaving a hold | 5997.2 ms (600 events; the exit falls between two timer events) | `B_C3_task3_exit.txt` |
-| Task 3 UART packets on the board | not tested - no RS-232 / USB-serial cable | `final_test_results.md` C3 |
+| Task 3 packets on the board | sent over the JTAG UART console (USB-Blaster cable; no RS-232 adapter needed since `b3f7a54`); C3.2-C3.6, C3.8 pass | `B_C3_jtag_packets.txt`, `final_test_results.md` C3 |
+| Valid packet from a hold | `8,3,1,8,3,1` -> 800 / 300 / 100 events, 7999.995 / 3000.068 / 999.738 ms; `4,2,1,4,2,1` -> 4000.282 / 1999.720 / 1000.219 ms | `B_C3_jtag_packets.txt` lines 270-276, 412-421 |
+| Packet during green | applied at the next R-R; the running green and yellow keep the old values | `B_C3_jtag_packets.txt` line 277 on |
+| Invalid packets | `12345,1,1,1,1,1` and `1,2,3` rejected; lights unchanged / still held; parser recovers | `B_C3_jtag_packets.txt` lines 318-334, 410-412 |
+| Two packets back to back | both committed in the same all-red, about 7 ms apart (mailbox re-checked every tick); first never visible | `B_C3_jtag_packets.txt` line 358, `final_test_results.md` finding |
 
 ## Future work
 
@@ -71,7 +75,7 @@ All times measured on the DE2-115 with timer_1 (50 MHz timestamp) unless noted. 
 | PC scripted suite | 29 / 29 cases pass | `pc_suite_results.txt`, `../nios/pc_suite.c` |
 | Random run (S28) | 1,000,000 ticks: 437 LEDR changes, 90 commits, 66 rejects, 13 snapshots, 0 rule violations | `pc_suite_results.txt` |
 | 0-second time-outs (X1, extra) | 17 rule violations: yellow / all-red skipped (e.g. `140 -> 36`, `33 -> 140`) | `pc_suite_results.txt`, `final_test_results.md` |
-| Board-log checker (T0) | all 20 raw `B_*.txt` logs, 1854 phases: 0 violations | `check_board_log.py` output, `final_test_results.md` T0 |
+| Board-log checker (T0) | all 21 raw `B_*.txt` logs, 2242 phases: 0 violations | `check_board_log.py` output, `final_test_results.md` T0 |
 | Fresh-clone build | builds with no manual edits; same ELF section sizes | `final_test_results.md` D4 |
 | Board inputs | board-only test passed; live JTAG trace: SW0 -> 0x00001, SW17 -> 0x20000, KEY0 -> keys 0x6 (original image) | `board_input_test.txt` |
 | Test status | per test ID | `final_test_results.md` |

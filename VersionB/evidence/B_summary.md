@@ -212,6 +212,21 @@ File `B_restored_10ms_after_E6.txt`: chart TIMER_MS = 10, main.c TIMER_PERIOD_MS
 
 All phases: 92689 ticks, 4250 timer events, 2181 ticks/s, 21.81 ticks per event, 95.41 % of ticks without a timer event.
 
+## C3: Task 3 packets over the JTAG console (four time-out sets in one log: intended / error columns refer to the defaults, see final_test_results.md C3)
+
+File `B_C3_jtag_packets.txt`: chart TIMER_MS = 10, main.c TIMER_PERIOD_MS = 10, 388 phases, 6 program start(s).
+
+| Phase | LEDR | Intended ms (events) | n | Mean ms | Min ms | Max ms | Mean error ms | Jitter ms | Mean ticks | Mean events | Ticks/event | Idle share |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| G-R  NS green | 33->34 | 6000 (600) | 66 | 5606.077 | 1999.642 | 8000.331 | -393.923 | 6000.689 | 11492.2 | 560.6 | 20.50 | 95.12 % |
+| Y-R  NS yellow | 34->36 | 2000 (200) | 66 | 2000.003 | 999.901 | 3000.397 | 0.003 | 2000.496 | 4107.5 | 200.0 | 20.54 | 95.13 % |
+| R-R  after NS | 36->12 | 500 (50) | 66 | 976.349 | 499.640 | 19940.280 | 476.349 | 19440.640 | 2000.8 | 97.6 | 20.49 | 95.12 % |
+| R-G  EW green | 12->20 | 6000 (600) | 64 | 5750.062 | 1999.710 | 8000.455 | -249.938 | 6000.745 | 11847.1 | 575.0 | 20.60 | 95.15 % |
+| R-Y  EW yellow | 20->36 | 2000 (200) | 63 | 2047.559 | 999.553 | 3000.197 | 47.559 | 2000.644 | 4216.3 | 204.8 | 20.59 | 95.14 % |
+| R-R  after EW | 36->33 | 500 (50) | 63 | 1679.210 | 499.681 | 63289.777 | 1179.210 | 62790.096 | 3430.3 | 167.9 | 20.43 | 95.10 % |
+
+All phases: 2401583 ticks, 116923 timer events, 2054 ticks/s, 20.54 ticks per event, 95.13 % of ticks without a timer event.
+
 ## B_C2_task2
 
 File `B_C2_task2.txt`: chart TIMER_MS = 10, main.c TIMER_PERIOD_MS = 10, 310 phases, 2 program start(s).

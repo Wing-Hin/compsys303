@@ -222,7 +222,13 @@ Compile with Netlist-based Compilation (C). Expect the same two "Instantaneous l
 
 ## 8. Step 7: Task 3 on the board
 
-1. Connect the DE2-115 RS-232 port to the PC (USB-serial adapter), and open PuTTY → Serial, COMx, 115200, 8N1, flow control **None**.
+1. Either connect the DE2-115 RS-232 port to the PC (USB-serial adapter) and open PuTTY → Serial, COMx, 115200, 8N1, flow control **None**, or use only the USB-Blaster cable: `main.c` also reads packets from the JTAG UART console (`nios2-terminal`). The C3 board tests used the second route, feeding `nios2-terminal`'s input from a file so every byte is exact (Nios II Command Shell):
+   ```
+   : > packets.txt
+   tail -f packets.txt | nios2-terminal | tee log.txt
+   printf '8,3,1,8,3,1\r\n' >> packets.txt      # from a second shell, one line per packet
+   ```
+   Typing into `nios2-terminal` directly also works, but Enter may send only CR: end each packet with **Ctrl+J** (LF) unless you have checked that Enter sends LF.
 2. SW1..0 = 10 (Task 3). At the next R-R the lights hold all-red (`waitingConfig`).
 3. Send `8,3,1,8,3,1` followed by CR LF. PuTTY's Enter sends only CR, which the parser ignores, so finish the packet with **Ctrl+J** (LF). A script is more reliable for repeat tests:
    ```python
