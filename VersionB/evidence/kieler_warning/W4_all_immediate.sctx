@@ -1,6 +1,7 @@
 // KIELER warning experiment W4 (not part of the controller): a loop whose
 // transitions are ALL immediate (no delayed transition) - the causality error
 // of brief Section 1.3. Expected: the warning AND a scheduling error, no code.
+// AI Use Declaration: see run_kieler_warning.py in this folder.
 scchart NoDelay {
     input bool t
     output int L = 0

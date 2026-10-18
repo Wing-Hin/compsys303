@@ -15,9 +15,11 @@
  * Default time-outs at TIMER_MS = 10: G 600, Y 200, R-R 50, walk 400 events;
  * a green with a walk ends 200 events after the walk.
  *
- * AI Use Declaration: The design and all design decisions were made by Harold and Lucas.
- * This test harness was written with the assistance of a generative AI tool (Claude,
- * Anthropic), then reviewed, tested and verified by Harold and Lucas.
+ * AI Use Declaration: All design decisions were made by Harold and Lucas. Harold and
+ * Lucas discussed the structure with generative AI tools and implemented the project
+ * by hand, with parts written with the assistance of Claude (Anthropic) and ChatGPT
+ * (OpenAI). This test harness was written with the assistance of Claude (Anthropic),
+ * then reviewed, tested and verified by Harold and Lucas.
  */
 #include <stdio.h>
 #include <string.h>

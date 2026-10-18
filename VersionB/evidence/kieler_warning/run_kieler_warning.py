@@ -16,9 +16,12 @@ and clocks (Version A); a real missing delayed transition is an ERROR (W4).
 
 Usage:  python run_kieler_warning.py      (writes results.txt next to this script)
 
-AI Use Declaration: The design and all design decisions were made by Harold and Lucas.
-This check script was written with the assistance of a generative AI tool (Claude,
-Anthropic), then reviewed, tested and verified by Harold and Lucas.
+AI Use Declaration: All design decisions were made by Harold and Lucas. Harold and
+Lucas discussed the structure with generative AI tools and implemented the project by
+hand, with parts written with the assistance of Claude (Anthropic) and ChatGPT
+(OpenAI). This check script and the four W*.sctx test charts were written with the
+assistance of Claude (Anthropic), then reviewed, tested and verified by Harold and
+Lucas.
 """
 
 import glob

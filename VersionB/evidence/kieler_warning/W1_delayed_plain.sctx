@@ -1,6 +1,7 @@
 // KIELER warning experiment W1 (not part of the controller): a two-state loop
 // closed by ONE delayed transition, no during actions, no clocks.
 // Expected: compiles with no message.
+// AI Use Declaration: see run_kieler_warning.py in this folder.
 scchart Plain {
     input bool t
     output int L = 0

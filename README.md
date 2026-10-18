@@ -3,7 +3,7 @@
 **Version A = simulator** (Timed SCCharts in KIELER, time from `deltaT`).
 **Version B = board** (the same controller on a Nios II on the DE2-115, time from a hardware timer).
 
-Group members: **Harold Tien** (`thar970`) and **Lucas Young** (`wyou790`).
+Group 14 members: **Harold Tien** (`thar970`) and **Lucas Young** (`wyou790`).
 
 **Selecting the timing version:** there is no switch for it. The brief allows separate charts, and
 each task exists as a Version A chart (clocks, run in the KIELER simulator) and a Version B chart

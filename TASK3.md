@@ -151,7 +151,6 @@ under `tmp/`, and are not assignment source deliverables.
 ## Authorship
 
 The original Part 1 code contains the group's existing AI-use declaration.
-The Task 3 extension, its design decisions, documentation, and tests were
-produced with OpenAI Codex assistance. Review and understand the changes before
-using them in your submission and describe assistance accurately under your
-course's rules.
+All design decisions for the Task 3 extension were made by Harold and Lucas.
+Its code, documentation and tests were written with the assistance of OpenAI
+Codex, then reviewed, tested and verified by Harold and Lucas.

@@ -23,10 +23,12 @@
 //  Board mapping (main.c with CHART 2): KEY0 -> NSraised, KEY1 -> EWraised,
 //  LEDR7..0 <- LEDR.
 //
-// AI Use Declaration: The design and all design decisions were made by Harold and Lucas.
-// The SCChart code (the Version B conversion of Task 2) was written with the
-// assistance of a generative AI tool (Claude, Anthropic), then reviewed, tested and
-// verified by Harold and Lucas.
+// AI Use Declaration: All design decisions were made by Harold and Lucas. Harold and
+// Lucas discussed the structure with generative AI tools and implemented the project
+// by hand, with parts written with the assistance of Claude (Anthropic) and ChatGPT
+// (OpenAI). This file (the Version B conversion of Task 2) was written with the
+// assistance of Claude (Anthropic), then reviewed, tested and verified by Harold and
+// Lucas.
 // =====================================================================
 scchart Task2_PedestrianTrafficLight_B {
 

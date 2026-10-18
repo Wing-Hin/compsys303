@@ -2,6 +2,7 @@
 // (ONE delayed transition), timed with a Timed SCCharts clock - the Version A
 // style. Shows that the clock expansion gives the same warning (plus the
 // informational cSD VariableStore note), while the code is still generated.
+// AI Use Declaration: see run_kieler_warning.py in this folder.
 @ClocksUseSD
 scchart Clock {
     output int L = 0
