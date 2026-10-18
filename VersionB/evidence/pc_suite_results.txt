@@ -1,0 +1,66 @@
+# 2026-10-19 00:50:51 +1300 | pc_suite (test B8) output | gcc 16.2.0, TrafficLight_B.c from the committed chart (TIMER_MS = 10)
+# Build: see the header of VersionB/nios/pc_suite.c
+pc_suite: TrafficLight_B, timer event every 7 ticks
+  S1   Task 1, 5 cycles: legal sequence, exact event counts       
+       -> PASS
+  S2   Task 2, NS press in R-G: 97 for 400 events                 
+       -> PASS
+  S3   Task 2, EW press in G-R: 140 for 400 events                
+       -> PASS
+  S4   Task 2, both pressed together: both walks                  
+       -> PASS
+  S5   Task 2, button held 3 s: one walk                          
+       -> PASS
+  S6   Task 2, three NS presses: one walk                         
+       -> PASS
+  S7   Task 2, NS press in its own green: next G-R                
+       -> PASS
+  S8   Task 2 -> 1 -> 2: request retained                         
+       -> PASS
+  S9   Task change in every phase: only at LEDR 36                
+       -> PASS
+  S10  task = 0, 5, 99: current mode kept                         
+       -> PASS
+  S11  Task 3 valid packet: 800/300/100                           
+       -> PASS
+  S12  Task 3 CRLF packet: same as S11                            
+       -> PASS
+  S13  Task 3 five invalid packets rejected                       
+       -> PASS
+  S14  Task 3 garbage then valid packet                           
+       -> PASS
+  S15  Task 3 leading zeros                                       
+       -> PASS
+  S16  Task 3 packet during green: next R-R                       
+       -> PASS
+  S17  Task 3 packet before entering Task 3                       
+       -> PASS
+  S18  Task 3 re-entered: waits for a new packet                  
+       -> PASS
+  S19  Task 3 second packet blocked, not lost                     
+       -> PASS
+  S20  Task 4 car in green: snapshot after 100 events             
+       -> PASS
+  S21  Task 4 car enters in yellow: 100 events, < 100 periods     
+       -> PASS
+  S22  Task 4 car leaves before the snapshot                      
+       -> PASS
+  S23  Task 4 leaves on the deadline tick: no snapshot            
+       -> PASS
+  S24  Task 4 one visit, two yellows: one snapshot                
+       -> PASS
+  S25  Task 4 leave and re-enter: second snapshot                 
+       -> PASS
+  S26  Task 4 -> 1 while armed: cancelled                         
+       -> PASS
+  S27  Task 4 button held 50 ticks: one press                     
+       -> PASS
+  S28  1,000,000 random ticks: T0 rules hold                      
+      437 LEDR changes, 90 commits, 66 rejects, 13 snapshots, seed 303
+       -> PASS
+  S29  No timer events: lights never change                       
+       -> PASS
+  X1   (extra, informational) random run with 0-second time-outs
+      zero-second time-outs allowed: 17 rule violation(s) in 83 changes, first: tick 6296: illegal change 140 -> 36
+
+TOTAL: 29 passed, 0 failed, of 29
