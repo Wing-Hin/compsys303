@@ -64,6 +64,7 @@ All times measured on the DE2-115 with timer_1 (50 MHz timestamp) unless noted. 
 | Defaults by packet | `6000,2000,500,6000,2000,500` -> exactly 600 / 200 / 50 events (500.317 ms all-red) | `B_C3_jtag_packets.txt` lines 58-70 |
 | Quantisation of odd values (B) | `1234,567,89,4321,765,98` -> 124 / 57 / 9 / 433 / 77 / 10 events = ceil(T / 10 ms); 1240.059 / 569.638 / 90.389 / 4329.627 / 770.076 / 100.176 ms | `B_C3_jtag_packets.txt` lines 71-79 |
 | Two packets back to back | both committed in the same all-red; the second commit came just after the first timer event and restarted the count: all-red 101 events instead of 100 (safe direction); first packet never visible | `B_C3_jtag_packets.txt` line 48, `final_test_results.md` finding |
+| Tasks 1, 2, 4 on the current build (R1) | Task 1 600/200/50; NS and EW walks 400 events then 200; snapshot after 999.327 ms, one per visit; leaving within 1 s: no snapshot | `B_R1_tasks124_current_build.txt`, `final_test_results.md` R1 |
 
 ## Future work
 
@@ -78,7 +79,7 @@ All times measured on the DE2-115 with timer_1 (50 MHz timestamp) unless noted. 
 | PC scripted suites | combined chart 30 / 30 (`pc_suite.c`); Task 2 chart 7 / 7 (`pc_task2.c`) | `pc_suite_results.txt`, `pc_task2_results.txt` |
 | Random run (S28) | 1,000,000 ticks: 537 LEDR changes, 92 commits, 70 rejects, 14 snapshots, 0 rule violations | `pc_suite_results.txt` |
 | 0 time-outs | earlier parser accepted 0: 17 rule violations in a random run (yellow / all-red skipped, e.g. `33 -> 140`); now rejected: S30 random run with 0 fields, 216 rejects, 0 violations | `pc_suite_results.txt` S30, `final_test_results.md` finding |
-| Board-log checker (T0) | all 21 raw `B_*.txt` logs, 1935 phases: 0 violations | `check_board_log.py` output, `final_test_results.md` T0 |
+| Board-log checker (T0) | all 22 raw `B_*.txt` logs, 2172 phases: 0 violations | `check_board_log.py` output, `final_test_results.md` T0 |
 | Fresh-clone build | builds with no manual edits; same ELF section sizes | `final_test_results.md` D4 |
 | Board inputs | board-only test passed; live JTAG trace: SW0 -> 0x00001, SW17 -> 0x20000, KEY0 -> keys 0x6 (original image) | `board_input_test.txt` |
 | Test status | per test ID | `final_test_results.md` |

@@ -15,7 +15,7 @@ checked by `check_board_log.py` (T0).
 
 | ID | P | Status | Evidence |
 |---|---|---|---|
-| T0 | M | PASS | `check_board_log.py` over all 21 raw board logs: 1935 phases, 0 violations. Negative test with a synthetic bad log: all 6 violation kinds detected (count, change, value, safety, short all-red, 97->34 without a commit); a synthetic Task 3 commit log is accepted. The checker also reads the `# ... sent ...: <packet>` markers: a phase may last the count of any **valid** packet (six 1-4 digit fields in ms, none 0) sent earlier in that log (approved rule change). Re-run negative test: wrong counts still fail without a marker, after a valid packet and after an invalid (ignored) packet; a short all-red still fails. |
+| T0 | M | PASS | `check_board_log.py` over all 22 raw board logs: 2172 phases, 0 violations. Negative test with a synthetic bad log: all 6 violation kinds detected (count, change, value, safety, short all-red, 97->34 without a commit); a synthetic Task 3 commit log is accepted. The checker also reads the `# ... sent ...: <packet>` markers: a phase may last the count of any **valid** packet (six 1-4 digit fields in ms, none 0) sent earlier in that log (approved rule change). Re-run negative test: wrong counts still fail without a marker, after a valid packet and after an invalid (ignored) packet; a short all-red still fails. |
 
 ## A. Version A - simulator regression
 
@@ -103,10 +103,19 @@ and LF transitions, Version A and B identical). Evidence: A13, S13, S30, C3.11.
 | C5.4 | S | PASS | `B_C5_modes.txt`: about 30 s of random KEY0-KEY2 presses in Task 4: both walks and a snapshot served, no freeze, T0 0 violations. |
 | C5.5 | N | PASS (limitation noted) | `B_C5_console.txt`: console closed for ~50 s: no freeze, timing exact, buffered output delivered on re-attach with no gap. The HAL JTAG UART buffer is finite (default 2 KB, about 70 s of output) - documented limitation. |
 
-Board regression note: the current build changes only the Task 3 paths (packet units, 0 rejection, commit
-target). Tasks 1, 2 and 4 on the board (C1, C2, C4, C5) were run with the earlier build; on the current
-generated code they are covered by the PC suite (S1-S10, S20-S29), the Version A simulation and B2, and
-C3.9 shows the default 600/200/50 cycle on the current build.
+### R1 - regression of Tasks 1, 2 and 4 on the current build
+
+C1, C2, C4 and C5 were run with the earlier build. The current build changes only the Task 3 paths, and
+R1 re-runs the main cases on it: `B_R1_tasks124_current_build.txt` (switch moves and key presses by Harold,
+marked by `#` lines; T0: 237 phases, 0 violations).
+
+| ID | P | Status | Evidence |
+|---|---|---|---|
+| R1.1 | M | PASS | Task 3 hold at start (4733 events, switches 10); SW1 down (00) -> hold left, Task 1 at 600/200/50 events every phase (lines 12-52). |
+| R1.2 | M | PASS | SW0 up (01, Task 2), KEY0 -> next NS green `36 -> 97`, walk 400 events (4000.197 ms), then 200 (lines 95-97). |
+| R1.3 | M | PASS | KEY1 -> next EW green `36 -> 140`, walk 400 events (3999.798 ms), then 200 (lines 124-126). A second EW walk two cycles later (lines 137-139) means a second KEY1 press was registered during the plain EW green of line 132; each request was served once. |
+| R1.4 | M | PASS | SW1 up (11, Task 4), KEY2 in a green -> `Camera activated` at the yellow, `Snapshot taken` after 999.327 ms; no camera message at the following yellows (one snapshot per visit); KEY2 -> `Vehicle left` (lines 177-198). |
+| R1.5 | M | PASS | Car leaving within 1 s of the activation: `Camera activated`, `Vehicle left`, no snapshot (lines 248-250). The try before (lines 238-242) left after the 1 s dwell and was photographed (999.297 ms), also correct. |
 
 ## D. Submission readiness
 

@@ -212,6 +212,31 @@ File `B_restored_10ms_after_E6.txt`: chart TIMER_MS = 10, main.c TIMER_PERIOD_MS
 
 All phases: 92689 ticks, 4250 timer events, 2181 ticks/s, 21.81 ticks per event, 95.41 % of ticks without a timer event.
 
+## R1: Tasks 1, 2 and 4 on the current build (starts with a Task 3 hold)
+
+File `B_R1_tasks124_current_build.txt`: chart TIMER_MS = 10, main.c TIMER_PERIOD_MS = 10, 237 phases, 1 program start(s).
+
+| Phase | LEDR | Intended ms (events) | n | Mean ms | Min ms | Max ms | Mean error ms | Jitter ms | Mean ticks | Mean events | Ticks/event | Idle share |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| G-R  NS green | 33->34 | 6000 (600) | 38 | 5999.990 | 5999.643 | 6000.916 | -0.010 | 1.273 | 13000.9 | 600.0 | 21.67 | 95.38 % |
+| G-R  NS green (after walk) | 33->34 | 2000 (200) | 1 | 2000.105 | 2000.105 | 2000.105 | 0.105 | 0.000 | 4338.0 | 200.0 | 21.69 | 95.39 % |
+| G-R  NS walk | 97->33 | 4000 (400) | 1 | 4000.197 | 4000.197 | 4000.197 | 0.197 | 0.000 | 8633.0 | 400.0 | 21.58 | 95.37 % |
+| Y-R  NS yellow | 34->36 | 2000 (200) | 39 | 2000.035 | 1999.630 | 2000.392 | 0.035 | 0.762 | 4305.3 | 200.0 | 21.53 | 95.35 % |
+| R-R  after NS | 36->12 | 500 (50) | 37 | 1765.724 | 499.615 | 47332.770 | 1265.724 | 46833.155 | 3801.1 | 176.6 | 21.53 | 95.35 % |
+| R-R  after NS (EW walk next) | 36->140 | 500 (50) | 2 | 500.076 | 500.075 | 500.077 | 0.076 | 0.002 | 1075.0 | 50.0 | 21.50 | 95.35 % |
+| R-G  EW green | 12->20 | 6000 (600) | 37 | 5999.966 | 5997.471 | 6000.416 | -0.034 | 2.945 | 12909.9 | 600.0 | 21.52 | 95.35 % |
+| R-G  EW green (after walk) | 12->20 | 2000 (200) | 2 | 2000.167 | 2000.161 | 2000.173 | 0.167 | 0.012 | 4296.5 | 200.0 | 21.48 | 95.35 % |
+| R-G  EW walk | 140->12 | 4000 (400) | 2 | 3999.839 | 3999.798 | 3999.880 | -0.161 | 0.082 | 8594.5 | 400.0 | 21.49 | 95.35 % |
+| R-Y  EW yellow | 20->36 | 2000 (200) | 39 | 1999.985 | 1999.590 | 2000.329 | -0.015 | 0.739 | 4288.6 | 200.0 | 21.44 | 95.34 % |
+| R-R  after EW | 36->33 | 500 (50) | 38 | 499.989 | 499.606 | 500.312 | -0.011 | 0.706 | 1074.4 | 50.0 | 21.49 | 95.35 % |
+| R-R  after EW (NS walk next) | 36->97 | 500 (50) | 1 | 499.710 | 499.710 | 499.710 | -0.290 | 0.000 | 1074.0 | 50.0 | 21.48 | 95.34 % |
+
+All phases: 1530307 ticks, 70983 timer events, 2156 ticks/s, 21.56 ticks per event, 95.36 % of ticks without a timer event.
+
+| Camera dwell | n | Mean ms | Min ms | Max ms | Jitter ms | Chart dwell ms |
+|---|---|---|---|---|---|---|
+| measured | 2 | 999.312 | 999.297 | 999.327 | 0.030 | 1000 |
+
 ## C3: Task 3 packets over the JTAG console (several time-out sets in one log: intended / error columns refer to the defaults, see final_test_results.md C3)
 
 File `B_C3_jtag_packets.txt`: chart TIMER_MS = 10, main.c TIMER_PERIOD_MS = 10, 81 phases, 1 program start(s).
