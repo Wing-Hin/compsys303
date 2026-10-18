@@ -99,7 +99,7 @@ A parser change that rejects 0 remains possible with the group's OK.
 | D9 | PASS | Dry-run list contains no `db/`, `incremental_db/`, `.metadata/`, `obj/`, `Hello_lab1*`, `_to_delete/`, board_test outputs or `TASK3_EDGE_RESULTS.md`. |
 | D10 | PENDING | Report (group). |
 | D11 | PENDING | Group. |
-| D12 | PENDING | Part 9. |
+| D12 | PASS | Pushed to `origin` (github.com/Wing-Hin/compsys303): `fcc6427..7743789 main -> main`; remote `main` = local HEAD `7743789`. |
 
 ## Known limitations found while testing
 
