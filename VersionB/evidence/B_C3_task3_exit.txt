@@ -1,0 +1,30 @@
+# 2026-10-19 01:25:29 +1300 | DE2-115 Nios II, traffic_b.elf | raw nios2-terminal output below
+# Settings: chart TrafficLight_VersionB.sctx TIMER_MS = 10 | main.c TIMER_PERIOD_MS = 10, CHART = 4
+# Tested: C3.1 + C3.7: Task 3 (switches = 0x00002 by JTAG read 01:25:03) holds at 36; then SW 00 leaves the hold with the last committed (default) timings. No UART cable: C3.2-C3.6, C3.8 pending
+nios2-terminal: connected to hardware target using JTAG UART on cable
+nios2-terminal: "USB-Blaster [USB-0]", device 1, instance 0
+nios2-terminal: (Use the IDE stop button or Ctrl-C to terminate)
+
+LEDR  20 ->  36 | previous phase  1999957 us |    4362 ticks |  Version B running: timer event every 10 ms
+LEDR  -1 ->  33 | previous phase      465 us |       1 ticks |      0 timer events
+LEDR  33 ->  34 | previous phase  6000667 us |   13133 ticks |    600 timer events
+LEDR  34 ->  36 | previous phase  2000167 us |    4377 ticks |    200 timer events
+LEDR  36 ->  12 | previous phase 45073311 us |  286107 ticks |  13097 timer events
+LEDR  12 ->  20 | previous phase  5997193 us |   13165 ticks |    600 timer events
+LEDR  20 ->  36 | previous phase  2000338 us |    4378 ticks |    200 timer events
+LEDR  36 ->  33 | previous phase   499802 us |    1092 ticks |     50 timer events
+LEDR  33 ->  34 | previous phase  6000185 us |   13165 ticks |    600 timer events
+LEDR  34 ->  36 | previous phase  1999958 us |    4389 ticks |    200 timer events
+LEDR  36 ->  12 | previous phase   499972 us |    1092 ticks |     50 timer events
+LEDR  12 ->  20 | previous phase  6000005 us |   13171 ticks |    600 timer events
+LEDR  20 ->  36 | previous phase  1999816 us |    4377 ticks |    200 timer events
+LEDR  36 ->  33 | previous phase   499916 us |    1092 ticks |     50 timer events
+LEDR  33 ->  34 | previous phase  6000332 us |   13167 ticks |    600 timer events
+LEDR  34 ->  36 | previous phase  1999827 us |    4389 ticks |    200 timer events
+LEDR  36 ->  12 | previous phase   499960 us |    1092 ticks |     50 timer events
+LEDR  12 ->  20 | previous phase  5999968 us |   13170 ticks |    600 timer events
+LEDR  20 ->  36 | previous phase  2000164 us |    4378 ticks |    200 timer events
+LEDR  36 ->  33 | previous phase   499966 us |    1092 ticks |     50 timer events
+
+
+nios2-terminal: exiting due to ^C on host

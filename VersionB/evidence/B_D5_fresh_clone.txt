@@ -23,3 +23,17 @@ LEDR  33 ->  34 | previous phase  6000044 us |   13166 ticks |    600 timer even
 LEDR  34 ->  36 | previous phase  1999891 us |    4389 ticks |    200 timer events
 LEDR  36 ->  12 | previous phase   500043 us |    1092 ticks |     50 timer events
 LEDR  12 ->  20 | previous phase  5999885 us |   13171 ticks |    600 timer events
+LEDR  20 ->  36 | previous phase  2000179 us |    4378 ticks |    200 timer events
+LEDR  36 ->  33 | previous phase   499896 us |    1092 ticks |     50 timer events
+LEDR  33 ->  34 | previous phase  6000278 us |   13166 ticks |    600 timer events
+LEDR  34 ->  36 | previous phase  1999884 us |    4389 ticks |    200 timer events
+LEDR  36 ->  12 | previous phase   499978 us |    1092 ticks |     50 timer events
+LEDR  12 ->  20 | previous phase  5999767 us |   13172 ticks |    600 timer events
+LEDR  20 ->  36 | previous phase  2000146 us |    4378 ticks |    200 timer events
+LEDR  36 ->  33 | previous phase   500252 us |    1093 ticks |     50 timer events
+LEDR  33 ->  34 | previous phase  5999725 us |   13169 ticks |    600 timer events
+LEDR  34 ->  36 | previous phase  2000263 us |    4390 ticks |    200 timer events
+LEDR  36 ->  12 | previous phase   499959 us |    1092 ticks |     50 timer events
+LEDR  12 ->  20 | previous phase  6000003 us |   13172 ticks |    600 timer events
+LEDR  20 ->  36 | previous phase  1999842 us |    4377 ticks |    200 timer events
+LEDR  36 ->  33 | previous phase   499816 us |    1092 ticks |     50 timer events
