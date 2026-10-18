@@ -1,0 +1,87 @@
+// =====================================================================
+//  COMPSYS 303 Assignment - Task 1
+//  Simple Traffic Light Controller - Version B (external Nios II timer,
+//  multiform time)
+//
+//  Same six phase states and the same LED words as Task1_VersionA.sctx.
+//  Only the timing mechanism differs: there are no clocks. main.c raises
+//  the input timerTick on a tick that carries one Nios II timer event, and
+//  each phase counts those events in c. A time-out is reached when
+//  c * TIMER_MS >= Tn, i.e. when the counted events cover the time-out.
+//
+//  c is reset in each phase's entry action and incremented by a (non-
+//  immediate) during action, so the event that caused the phase change is
+//  not counted again by the new phase.
+//
+//  Five of the six transitions are immediate; the one delayed transition,
+//  RR2 -> GR, closes the cycle (as in Version A).
+//
+// AI Use Declaration: The design and all design decisions were made by Harold and Lucas.
+// The SCChart code was written with the assistance of a generative AI tool (Claude,
+// Anthropic), then reviewed, simulated and verified by Harold and Lucas.
+// =====================================================================
+scchart Task1_TrafficLight_B {
+
+    // ---------- Version B: the single named rate of the external timer ----------
+    const int TIMER_MS = 10   // ms between two timer events; must equal TIMER_PERIOD_MS in main.c
+
+    // ---------- Configurability (Section 3): phase time-outs in milliseconds ----------
+    const int T1 = 6000   // G-R  NS green,  EW red
+    const int T2 = 2000   // Y-R  NS yellow, EW red
+    const int T3 = 500    // R-R  all red (after NS)
+    const int T4 = 6000   // R-G  NS red,   EW green
+    const int T5 = 2000   // R-Y  NS red,   EW yellow
+    const int T6 = 500    // R-R  all red (after EW)
+
+    // ---------- Table 1: lamp bits of the red LED word ----------
+    //  bit 5   bit 4   bit 3   bit 2   bit 1   bit 0
+    //  EW-R    EW-Y    EW-G    NS-R    NS-Y    NS-G
+    const int NS_G = 1, NS_Y = 2, NS_R = 4, EW_G = 8, EW_Y = 16, EW_R = 32
+
+    // ---------- Reactive interface ----------
+    input  bool timerTick   // true on a tick that carries one Nios II timer event
+    output int  LEDR = 33   // red LED word, bits 5..0 as in Table 1 (33 = G-R)
+
+    // ---------- Time (multiform): the phase counter ----------
+    output int c = 0        // timer events counted since the current phase was entered
+                            // (output only so it is visible while debugging)
+
+    region Lights {
+
+        initial state GR "G-R: NS green, EW red" {
+            entry do c = 0; LEDR = EW_R + NS_G      // 33
+            during if timerTick do c++
+        }
+        immediate if c * TIMER_MS >= T1 go to YR
+
+        state YR "Y-R: NS yellow, EW red" {
+            entry do c = 0; LEDR = EW_R + NS_Y      // 34
+            during if timerTick do c++
+        }
+        immediate if c * TIMER_MS >= T2 go to RR1
+
+        state RR1 "R-R: all red" {
+            entry do c = 0; LEDR = EW_R + NS_R      // 36
+            during if timerTick do c++
+        }
+        immediate if c * TIMER_MS >= T3 go to RG
+
+        state RG "R-G: NS red, EW green" {
+            entry do c = 0; LEDR = EW_G + NS_R      // 12
+            during if timerTick do c++
+        }
+        immediate if c * TIMER_MS >= T4 go to RY
+
+        state RY "R-Y: NS red, EW yellow" {
+            entry do c = 0; LEDR = EW_Y + NS_R      // 20
+            during if timerTick do c++
+        }
+        immediate if c * TIMER_MS >= T5 go to RR2
+
+        state RR2 "R-R: all red" {
+            entry do c = 0; LEDR = EW_R + NS_R      // 36
+            during if timerTick do c++
+        }
+        if c * TIMER_MS >= T6 go to GR    // the ONE delayed transition: closes the cycle
+    }
+}

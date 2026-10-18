@@ -1,0 +1,341 @@
+// =====================================================================
+//  COMPSYS 303 - Version B, Tasks 1, 2, 3 and 4 (external Nios II timer,
+//  multiform time)
+//
+//  task: 1 = basic, 2 = pedestrians, 3 = configuration, 4 = camera + pedestrians.
+//  All mode changes and timing commits occur with LEDR = 36 (all red).
+//
+//  TIME: this chart has no clocks. main.c raises the input timerTick on a
+//  tick that carries one Nios II timer interrupt (every TIMER_MS ms). Every
+//  timed activity owns an integer counter, reset to 0 when the activity
+//  starts and incremented once per timerTick, and a time-out is reached when
+//  counter * TIMER_MS >= time-out. Time-outs are integer milliseconds.
+//    c        phase counter (Lights)             - t1..t6
+//    wNS, wEW walk counters, local to each green  - WALK_TIME
+//    camCount camera dwell counter (Camera)       - CAMERA_DWELL
+//  c and camCount count the SAME event stream: one external signal counted
+//  for two purposes at once (brief, Task 4).
+//
+//  Where the counting happens:
+//    * states that rest across ticks (GR, YR, RG, RY, WalkNS, WalkEW) count
+//      in a non-immediate during action, so the event that ended the previous
+//      phase is not counted again on the entry tick;
+//    * the all-red decision loop (RRnSelect -> Config -> Exit -> Wait) and the
+//      camera loop are re-entered every tick, so they count on the delayed
+//      transition that closes the loop instead.
+//
+//  Configuration: ASCII character sequence on configChar, configValid per tick,
+//  packet "#,#,#,#,#,#\n" in integer SECONDS (same packets as Version A),
+//  converted to milliseconds when committed.
+//
+//  Board mapping is in main.c: SW1..0 -> task, KEY0 -> NSraised,
+//  KEY1 -> EWraised, KEY2 -> vehicleButton, RS-232 -> configChar,
+//  LEDR7..0 <- LEDR, print(...) -> JTAG UART console.
+//
+// AI Use Declaration: The design and all design decisions were made by Harold
+// and Lucas. The SCChart code was written with the assistance of generative AI
+// tools (this Version B conversion: Claude, Anthropic; the Task 3 and Task 4
+// logic carried over from Version A: OpenAI Codex), then reviewed, simulated
+// and verified by Harold and Lucas in KIELER and on the DE2-115.
+// =====================================================================
+scchart TrafficLight_B {
+
+    // ---------- Version B: the single named rate of the external timer ----------
+    const int TIMER_MS = 10         // ms between two timer events; equals TIMER_PERIOD_MS in main.c
+
+    // ---------- Configurability (Section 3): time-outs in milliseconds ----------
+    const int T1 = 6000     // G-R  NS green,  EW red
+    const int T2 = 2000     // Y-R  NS yellow, EW red
+    const int T3 = 500      // R-R  all red (after NS)
+    const int T4 = 6000     // R-G  NS red,   EW green
+    const int T5 = 2000     // R-Y  NS red,   EW yellow
+    const int T6 = 500      // R-R  all red (after EW)
+    const int WALK_TIME = 4000      // green-state exit also ends the walk phase
+    const int CAMERA_DWELL = 1000   // allowed vehicle dwell after camera activation
+    const int MS_PER_S = 1000       // packet values (seconds) -> active time-outs (ms)
+
+    // Named defaults above remain constants; active values must be writable.
+    output int t1 = T1, t2 = T2, t3 = T3, t4 = T4, t5 = T5, t6 = T6
+
+    // ASCII codes keep this interface usable in both the simulator and UART.
+    const int ASCII_ZERO = 48, ASCII_NINE = 57, COMMA = 44, CR = 13, LF = 10
+    const int MAX_DIGITS = 4
+
+    // ---------- Table 1: lamp bits of the red LED word ----------
+    const int NS_G = 1, NS_Y = 2, NS_R = 4, EW_G = 8, EW_Y = 16, EW_R = 32
+    const int NS_PED = 64, EW_PED = 128     // bits 6 and 7: the pedestrian lights
+
+    // ---------- Reactive interface ----------
+    input  bool timerTick               // true on a tick carrying one timer event (Version B time reference)
+    input  int  task                    // requested task: 1 = plain cycle, 2 = pedestrians, 3 = configuration, 4 = camera
+    input  bool NSraised, EWraised      // pedestrian request buttons (events)
+    output int  activeTask = 1          // task in effect (changes only in R-R)
+    output int  LEDR = 33               // Initially NS green(1) + EW red(32)
+
+    input int configChar                 // one ASCII character, e.g. 54 = '6'
+    input bool configValid               // true: read the character in configChar this tick
+    output bool configReady = true       // true: ready to receive a configuration character
+    output bool waitingConfig = false    // Task 3 entered: holding all-red while waiting for valid configuration
+    output int configApplied = 0         // how many packets have been successfully applied.
+    output int configRejected = 0        // counts invalid packets rejected when their newline arrives
+
+    input bool vehicleButton            // rising edges toggle entry/exit
+    output bool vehiclePresent = false
+    output bool cameraArmed = false      // a dwell counter is running
+    output bool cameraActivated = false  // one-tick message indicators
+    output bool snapshotTaken = false
+    output bool vehicleLeft = false
+    output int snapshots = 0             // cumulative count, useful in simulation
+    bool photographed = false            // at most one snapshot per vehicle visit
+    output int camCount = 0              // timer events since the camera was armed (Camera only)
+
+    // Configuration owns the parser and mailbox. Lights only reads pre(...).
+    int configSequence = 0 // increments on each valid packet
+    int pending1 = 0, pending2 = 0, pending3 = 0
+    int pending4 = 0, pending5 = 0, pending6 = 0
+    int field = 0, digits = 0, number = 0 // parser state: which field, how many digits, current number
+    int staged1 = 0, staged2 = 0, staged3 = 0, staged4 = 0, staged5 = 0 // Temporarily store the first five completed numbers while the rest of the packet is arriving.
+    bool badPacket = false
+
+    // ---------- Shared variables (single writer each; Lights reads via pre) ----------
+    int nsRequests = 0, ewRequests = 0  // presses counted, written by NSRequest / EWRequest only
+    int nsServed = 0,   ewServed = 0    // presses served, written and read by Lights only
+
+    // ---------- Time (multiform): the phase counter ----------
+    output int c = 0        // timer events counted since the current phase was entered (Lights only)
+
+    // ------------------------------------------------------------------
+    region Lights {
+
+        initial state GR "G-R: NS green, EW red" {
+            int wNS = 0                             // NS walk counter, local to this green
+            entry do c = 0; LEDR = EW_R + NS_G      // 33; the walk states add / remove bit 6
+            during if timerTick do c++              // not on the entry tick
+
+            region NSWalk {
+                initial state DecideNS
+                    immediate if activeTask >= 2 && pre(nsRequests) > nsServed
+                        do nsServed = pre(nsRequests); wNS = 0 go to WalkNS      // request pending
+                    immediate if !(activeTask >= 2 && pre(nsRequests) > nsServed) go to NoWalkNS
+
+                state WalkNS "NS walk light on" {
+                    entry do LEDR = EW_R + NS_G + NS_PED    // 97
+                    during if timerTick do wNS++            // second counter on the same event stream
+                }
+                immediate if wNS * TIMER_MS >= WALK_TIME do nsServed = pre(nsRequests) go to NoWalkNS
+
+                state NoWalkNS "NS walk light off" {
+                    entry do LEDR = EW_R + NS_G             // 33
+                }
+            }
+        }
+        // The one delayed transition on the main six-phase cycle.
+        if c * TIMER_MS >= t1 go to YR
+
+        state YR "Y-R: NS yellow, EW red" {
+            entry do c = 0; LEDR = EW_R + NS_Y      // 34: whole word rewritten, so the NS walk bit is off
+            during if timerTick do c++
+        }
+        immediate if c * TIMER_MS >= t2 go to RR1
+
+        state RR1 "R-R: all red" {
+            entry do c = 0; LEDR = EW_R + NS_R      // 36; left immediately, so no counting here
+        }
+        immediate go to RR1Select
+
+        // Explicit decision states put mode selection before commit/exit.
+        state RR1Select
+            immediate if task == 3 && activeTask != 3
+                do activeTask = 3; waitingConfig = true go to RR1Config
+            immediate if task == 1 || task == 2 || task == 4
+                do activeTask = task; waitingConfig = false go to RR1Config
+            immediate go to RR1Config  // retain current mode for task 3 or invalid inputs
+
+        state RR1Config
+            immediate if activeTask >= 3 && pre(configSequence) != configApplied
+                do t1 = pre(pending1) * MS_PER_S; t2 = pre(pending2) * MS_PER_S; t3 = pre(pending3) * MS_PER_S;
+                   t4 = pre(pending4) * MS_PER_S; t5 = pre(pending5) * MS_PER_S; t6 = pre(pending6) * MS_PER_S;
+                   configApplied = pre(configSequence); waitingConfig = false; c = 0
+                go to RR1Wait  // keep all-red visible for the commit tick, even if t3 = 0
+            immediate go to RR1Exit
+
+        state RR1Exit
+            immediate if !waitingConfig && c * TIMER_MS >= t3 go to RG
+            immediate go to RR1Wait
+
+        state RR1Wait
+            // Delayed edges close the loop; the all-red counting happens here, because
+            // RR1Wait is re-entered every tick (a during action would never fire).
+            if timerTick do c++ go to RR1Select
+            go to RR1Select
+
+        state RG "R-G: NS red, EW green" {
+            int wEW = 0                             // EW walk counter, local to this green
+            entry do c = 0; LEDR = EW_G + NS_R      // 12; the walk states add / remove bit 7
+            during if timerTick do c++
+
+            region EWWalk {
+                initial state DecideEW
+                    immediate if activeTask >= 2 && pre(ewRequests) > ewServed
+                        do ewServed = pre(ewRequests); wEW = 0 go to WalkEW
+                    immediate if !(activeTask >= 2 && pre(ewRequests) > ewServed) go to NoWalkEW
+
+                state WalkEW "EW walk light on" {
+                    entry do LEDR = EW_G + NS_R + EW_PED    // 140
+                    during if timerTick do wEW++
+                }
+                immediate if wEW * TIMER_MS >= WALK_TIME do ewServed = pre(ewRequests) go to NoWalkEW
+
+                state NoWalkEW "EW walk light off" {
+                    entry do LEDR = EW_G + NS_R             // 12
+                }
+            }
+        }
+        immediate if c * TIMER_MS >= t4 go to RY
+
+        state RY "R-Y: NS red, EW yellow" {
+            entry do c = 0; LEDR = EW_Y + NS_R      // 20: whole word rewritten, so the EW walk bit is off
+            during if timerTick do c++
+        }
+        immediate if c * TIMER_MS >= t5 go to RR2
+
+        state RR2 "R-R: all red" {
+            entry do c = 0; LEDR = EW_R + NS_R      // 36; left immediately, so no counting here
+        }
+        immediate go to RR2Select
+
+        // Explicit decision states put mode selection before commit/exit.
+        state RR2Select
+            immediate if task == 3 && activeTask != 3
+                do activeTask = 3; waitingConfig = true go to RR2Config
+            immediate if task == 1 || task == 2 || task == 4
+                do activeTask = task; waitingConfig = false go to RR2Config
+            immediate go to RR2Config  // retain current mode for task 3 or invalid inputs
+
+        state RR2Config
+            immediate if activeTask >= 3 && pre(configSequence) != configApplied
+                do t1 = pre(pending1) * MS_PER_S; t2 = pre(pending2) * MS_PER_S; t3 = pre(pending3) * MS_PER_S;
+                   t4 = pre(pending4) * MS_PER_S; t5 = pre(pending5) * MS_PER_S; t6 = pre(pending6) * MS_PER_S;
+                   configApplied = pre(configSequence); waitingConfig = false; c = 0
+                go to RR2Wait  // keep all-red visible for the commit tick, even if t6 = 0
+            immediate go to RR2Exit
+
+        state RR2Exit
+            immediate if !waitingConfig && c * TIMER_MS >= t6 go to GR
+            immediate go to RR2Wait
+
+        state RR2Wait
+            if timerTick do c++ go to RR2Select    // delayed: count, then recheck mode/packet next tick
+            go to RR2Select
+
+    }
+
+    // ------------------------------------------------------------------
+    region NSRequest {
+        initial state ReleasedNS
+            immediate if NSraised do nsRequests++ go to PressedNS     // one request per press
+
+        state PressedNS "NS button held"
+            if !NSraised go to ReleasedNS                             // delayed: closes this loop
+    }
+
+    // ------------------------------------------------------------------
+    region EWRequest {
+        initial state ReleasedEW
+            immediate if EWraised do ewRequests++ go to PressedEW
+
+        state PressedEW "EW button held"
+            if !EWraised go to ReleasedEW                             // delayed: closes this loop
+    }
+
+    // Independent streaming parser: exactly six 1-4 digit unsigned values.
+    // A malformed packet is discarded through LF, then parsing can recover.
+    // One mailbox provides backpressure: no second packet can overwrite it.
+    // Untimed, therefore identical to Version A.
+    region Configuration {
+        initial state Receive
+            immediate if configValid && configReady go to Classify
+
+        state Classify
+            immediate if configChar == CR go to NextCharacter
+            immediate if configChar == LF && !badPacket && field == 5 && digits > 0
+                do pending1 = staged1; pending2 = staged2; pending3 = staged3;
+                   pending4 = staged4; pending5 = staged5; pending6 = number;
+                   configSequence++; configReady = false;
+                   field = 0; digits = 0; number = 0; badPacket = false
+                go to Published
+            immediate if configChar == LF
+                do configRejected++; field = 0; digits = 0; number = 0; badPacket = false
+                go to NextCharacter
+            immediate if badPacket go to NextCharacter
+            immediate if configChar >= ASCII_ZERO && configChar <= ASCII_NINE && digits < MAX_DIGITS
+                do number *= 10; number += configChar - ASCII_ZERO; digits++
+                go to NextCharacter
+            immediate if configChar == COMMA && digits > 0 && field == 0
+                do staged1 = number; field++; digits = 0; number = 0
+                go to NextCharacter
+            immediate if configChar == COMMA && digits > 0 && field == 1
+                do staged2 = number; field++; digits = 0; number = 0
+                go to NextCharacter
+            immediate if configChar == COMMA && digits > 0 && field == 2
+                do staged3 = number; field++; digits = 0; number = 0
+                go to NextCharacter
+            immediate if configChar == COMMA && digits > 0 && field == 3
+                do staged4 = number; field++; digits = 0; number = 0
+                go to NextCharacter
+            immediate if configChar == COMMA && digits > 0 && field == 4
+                do staged5 = number; field++; digits = 0; number = 0
+                go to NextCharacter
+            // Empty fields, fifth digits, extra commas and other characters.
+            immediate do badPacket = true go to NextCharacter
+
+        state NextCharacter
+            go to Receive  // one delayed edge: at most one character per tick
+
+        state Published
+            // Mailbox remains stable until Lights acknowledges its sequence.
+            if pre(configApplied) == configSequence
+                do configReady = true go to Receive
+    }
+
+    // Vehicle edges and camera decisions share one sequential region: a leave
+    // on the deadline tick is processed BEFORE the timeout (no false snapshot).
+    // Read current Lights outputs; Camera never writes LEDR or activeTask.
+    // The dwell is counted on the delayed edge NextCameraTick -> SampleVehicle,
+    // which runs first in every tick, so the deadline check below sees the
+    // count including this tick's event.
+    // Version A additionally has an ArmedCheck state after arming: a Timed
+    // SCCharts Dynamic-mode workaround so the activation tick requests a
+    // wake-up CAMERA_DWELL later. Version B ticks continuously and tests
+    // camCount every tick, so no such state is needed here.
+    region Camera {
+        initial state SampleVehicle {
+            entry do cameraActivated = false; snapshotTaken = false; vehicleLeft = false
+        }
+        immediate if vehicleButton && !pre(vehicleButton) && vehiclePresent
+            do vehiclePresent = false; photographed = false go to ReportLeave
+        immediate if vehicleButton && !pre(vehicleButton) && !vehiclePresent
+            do vehiclePresent = true; photographed = false go to CheckCamera
+        immediate go to CheckCamera
+
+        state ReportLeave
+            immediate if activeTask == 4
+                do vehicleLeft = true; print("Vehicle left\\n") go to CheckCamera
+            immediate go to CheckCamera
+
+        state CheckCamera
+            immediate if activeTask != 4 || !vehiclePresent
+                do cameraArmed = false go to NextCameraTick
+            immediate if cameraArmed && camCount * TIMER_MS >= CAMERA_DWELL
+                do cameraArmed = false; photographed = true; snapshotTaken = true;
+                   snapshots++; print("Snapshot taken\\n") go to NextCameraTick
+            immediate if !cameraArmed && !photographed && (LEDR == 34 || LEDR == 20)
+                do camCount = 0; cameraArmed = true; cameraActivated = true;
+                   print("Camera activated\\n") go to NextCameraTick
+            immediate go to NextCameraTick
+
+        state NextCameraTick
+            if timerTick && cameraArmed do camCount++ go to SampleVehicle   // delayed: count the dwell
+            go to SampleVehicle                                           // delayed: one decision per tick
+    }
+}

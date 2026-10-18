@@ -1,0 +1,175 @@
+/*
+ * COMPSYS 303 Assignment - Version B glue code (Nios II, DE2-115)
+ *
+ * The reactive interface between the Nios II interval timer and the
+ * KIELER-generated SCChart code (sccharts.c / sccharts.h).
+ *
+ *   timer interrupt  ->  pendingEvents++            (ISR, every TIMER_PERIOD_MS)
+ *   main loop        ->  sample switches/keys/UART  (sensor stage)
+ *                        timerTick = take one event
+ *                        tick(&d)                   (controller stage)
+ *                        write LEDR                 (plant stage)
+ *
+ * The chart never sees time, only the timerTick event: this is multiform time.
+ * The loop runs freely, so most ticks carry no timer event; that difference
+ * (ticks computed vs events counted) is logged for the Section 4 comparison.
+ *
+ * AI Use Declaration: The design and all design decisions were made by Harold and Lucas.
+ * This glue code was written with the assistance of a generative AI tool (Claude,
+ * Anthropic), then reviewed, tested and verified by Harold and Lucas on the DE2-115.
+ */
+
+#include <stdio.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <system.h>
+#include <alt_types.h>
+#include <sys/alt_irq.h>
+#include <sys/alt_alarm.h>
+#include <sys/alt_timestamp.h>
+#include <altera_avalon_pio_regs.h>
+#include "sccharts.h"            /* the generated header, pasted from KIELER */
+
+/* ---------------------------------------------------------------------------
+ * Which chart is pasted into sccharts.c / sccharts.h:
+ *   1 = Task1_VersionB.sctx           (timerTick, LEDR)
+ *   2 = Task2_VersionB.sctx           (+ NSraised, EWraised)
+ *   4 = TrafficLight_VersionB.sctx    (Tasks 1-4: + task, UART config, camera)
+ * ------------------------------------------------------------------------- */
+#define CHART 4
+
+/* The C-side copy of the timer rate. Keep it equal to TIMER_MS in the chart.
+ * Changing ONLY this value is the brief's "rescale" check (Section 2.1).     */
+#define TIMER_PERIOD_MS 10
+
+/* Board mapping (document this in the README) */
+#define KEY_NS    0x1   /* KEY0: NS pedestrian button   -> NSraised        */
+#define KEY_EW    0x2   /* KEY1: EW pedestrian button   -> EWraised        */
+#define KEY_CAR   0x4   /* KEY2: vehicle enter/leave    -> vehicleButton   */
+#define SW_TASK   0x3   /* SW1..SW0: 00 = Task 1 ... 11 = Task 4           */
+                        /* KEY3 is the hardware reset of the Nios II system */
+
+/* ---------------------------------------------------------------------------
+ * Timer interrupt: the external timing reference.
+ * alt_alarm callbacks run inside the system-clock timer ISR, so keep it short.
+ * ------------------------------------------------------------------------- */
+static volatile alt_u32 pendingEvents = 0;  /* events not yet handed to the chart */
+static alt_u32 alarmTicks = 1;              /* alarm period in system-clock ticks */
+
+static alt_u32 timer_isr(void* context)
+{
+    (void) context;
+    pendingEvents++;
+    return alarmTicks;                      /* re-arm with the same period */
+}
+
+/* Hand at most one timer event to the chart per tick. If the loop was slow
+ * (e.g. a printf blocked), events wait in pendingEvents instead of being lost. */
+static char take_timer_event(void)
+{
+    char got = 0;
+    alt_irq_context ctx = alt_irq_disable_all();   /* the ISR also writes pendingEvents */
+    if (pendingEvents > 0) {
+        pendingEvents--;
+        got = 1;
+    }
+    alt_irq_enable_all(ctx);
+    return got;
+}
+
+int main(void)
+{
+    TickData d = {0};
+    reset(&d);
+
+    /* Independent stopwatch for the evidence log (timer_1 as timestamp timer) */
+    alt_u32 tsPerUs = 1;
+    if (alt_timestamp_start() >= 0) {
+        tsPerUs = alt_timestamp_freq() / 1000000u;
+    } else {
+        printf("No timestamp timer: set hal.timestamp_timer = timer_1 in the BSP\n");
+    }
+
+#if CHART == 4
+    int uartFd = open(UART_NAME, O_RDONLY | O_NONBLOCK);
+    if (uartFd < 0) printf("UART not opened: Task 3 configuration input disabled\n");
+#endif
+
+    /* Start the external timer. alt_alarm counts system-clock ticks. */
+    static alt_alarm alarm;
+    alarmTicks = (TIMER_PERIOD_MS * alt_ticks_per_second()) / 1000u;
+    if (alarmTicks == 0) alarmTicks = 1;
+    if (alt_alarm_start(&alarm, alarmTicks, timer_isr, NULL) < 0) {
+        printf("No system clock timer: set hal.sys_clk_timer = timer_0 in the BSP\n");
+    }
+
+    printf("Version B running: timer event every %d ms\n", TIMER_PERIOD_MS);
+
+    int     lastLEDR      = -1;
+    alt_u32 phaseStart    = alt_timestamp();
+    alt_u32 ticksInPhase  = 0;
+    alt_u32 eventsInPhase = 0;
+#if CHART == 4
+    char    lastActivated = 0, lastSnapshot = 0;
+    alt_u32 cameraStart   = 0;
+#endif
+
+    while (1) {
+        /* ---------- 1. Sensor stage: sample the board ---------- */
+        d.timerTick = take_timer_event();
+
+#if CHART >= 2
+        alt_u32 keys = ~IORD_ALTERA_AVALON_PIO_DATA(KEYS_BASE) & 0x7;  /* keys are active low */
+        d.NSraised = (keys & KEY_NS) != 0;
+        d.EWraised = (keys & KEY_EW) != 0;
+#endif
+#if CHART == 4
+        alt_u32 sw = IORD_ALTERA_AVALON_PIO_DATA(SWITCHES_BASE);
+        d.task          = (int)(sw & SW_TASK) + 1;
+        d.vehicleButton = (keys & KEY_CAR) != 0;
+
+        /* Task 3: one UART byte per tick, and only when the chart said it was
+         * ready after the previous tick. Bytes wait in the HAL UART buffer. */
+        d.configValid = 0;
+        if (uartFd >= 0 && d.configReady) {
+            char ch;
+            if (read(uartFd, &ch, 1) == 1) {
+                d.configChar  = (unsigned char) ch;
+                d.configValid = 1;
+            }
+        }
+#endif
+
+        /* ---------- 2. Controller stage: one synchronous reaction ---------- */
+        tick(&d);
+        ticksInPhase++;
+        if (d.timerTick) eventsInPhase++;
+
+        /* ---------- 3. Plant stage: drive the lamps ---------- */
+        IOWR_ALTERA_AVALON_PIO_DATA(LEDS_RED_BASE, d.LEDR);
+
+        /* ---------- Evidence log (JTAG UART console) ---------- */
+        if (d.LEDR != lastLEDR) {
+            alt_u32 now = alt_timestamp();
+            alt_u32 us  = (now - phaseStart) / tsPerUs;   /* wraps safely below ~85 s */
+            printf("LEDR %3d -> %3d | previous phase %8lu us | %7lu ticks | %6lu timer events\n",
+                   lastLEDR, d.LEDR, (unsigned long) us,
+                   (unsigned long) ticksInPhase, (unsigned long) eventsInPhase);
+            lastLEDR      = d.LEDR;
+            phaseStart    = now;
+            ticksInPhase  = 0;
+            eventsInPhase = 0;
+        }
+#if CHART == 4
+        if (d.cameraActivated && !lastActivated) cameraStart = alt_timestamp();
+        if (d.snapshotTaken && !lastSnapshot) {
+            printf("  camera dwell measured: %lu us\n",
+                   (unsigned long) ((alt_timestamp() - cameraStart) / tsPerUs));
+        }
+        lastActivated = d.cameraActivated;
+        lastSnapshot  = d.snapshotTaken;
+#endif
+    }
+
+    return 0;
+}

@@ -210,7 +210,7 @@ scchart TrafficLight_A {
     // One mailbox provides backpressure: no second packet can overwrite it.
     region Configuration {
         initial state Receive
-            immediate if configValid && pre(configReady) go to Classify
+            immediate if configValid && configReady go to Classify
 
         state Classify
             immediate if configChar == CR go to NextCharacter
@@ -280,7 +280,15 @@ scchart TrafficLight_A {
                    snapshots++; print("Snapshot taken\\n") go to NextCameraTick
             immediate if !cameraArmed && !photographed && (LEDR == 34 || LEDR == 20)
                 do cameraClock = 0.0; cameraArmed = true; cameraActivated = true;
-                   print("Camera activated\\n") go to NextCameraTick
+                   print("Camera activated\\n") go to ArmedCheck
+            immediate go to NextCameraTick
+
+        // Entered after cameraClock was reset, so its guard is evaluated with
+        // cameraClock = 0 and KIELER schedules a wake-up CAMERA_DWELL later.
+        // Without this state the activation tick asks for no wake-up and, in
+        // Dynamic mode, the snapshot slips to the next light change.
+        state ArmedCheck
+            immediate if cameraClock >= CAMERA_DWELL go to NextCameraTick
             immediate go to NextCameraTick
 
         state NextCameraTick
