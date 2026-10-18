@@ -3,7 +3,8 @@ COMPSYS 303 - build the submission zip group_<N>.zip from the repository.
 
   powershell -ExecutionPolicy Bypass -File VersionB\make_submission.ps1 -Group 7 -DryRun
   powershell -ExecutionPolicy Bypass -File VersionB\make_submission.ps1 -Group 7
-  options: -IncludeElf (add traffic_b.elf), -Pof <path>, -Out <zip path>
+  options: -IncludeElf (add traffic_b.elf), -Pof <path>, -Out <zip path>,
+           -Draft (no .pof yet: packs the time-limited .sof, writes group_<N>_draft.zip)
 
 Included (repository-relative paths are kept inside the zip):
   * the SCCharts: *_VersionA.sctx (root) and VersionB/*_VersionB.sctx
@@ -26,12 +27,14 @@ param(
     [Parameter(Mandatory = $true)][int]$Group,
     [switch]$DryRun,
     [switch]$IncludeElf,
+    [switch]$Draft,
     [string]$Pof = "VersionB\COMPSYS303_Lab1\output_files\COMPSYS303_Lab1.pof",
     [string]$Out = ""
 )
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
-if (-not $Out) { $Out = Join-Path $root "group_$Group.zip" }
+$zipName = if ($Draft) { "group_${Group}_draft.zip" } else { "group_$Group.zip" }
+if (-not $Out) { $Out = Join-Path $root $zipName }
 
 function Rel([string]$full) { return $full.Substring($root.Length + 1) }
 
@@ -57,14 +60,19 @@ Add-Files (Get-Item (Join-Path $root "VersionB\COMPSYS303_Lab1\nios2_system.sopc
 Add-Files (Get-ChildItem -Path (Join-Path $root "VersionB\evidence") -Recurse -File)
 Add-Files (Get-ChildItem -Path (Join-Path $root "VersionB\nios") -File | Where-Object { $_.Extension -in ".c", ".h" })
 
-# The .pof is mandatory
+# The .pof is mandatory for the real submission. -Draft packs the time-limited
+# development .sof in its place so the rest of the package can be checked early.
 $pofPath = if ([System.IO.Path]::IsPathRooted($Pof)) { $Pof } else { Join-Path $root $Pof }
 $pofOk = Test-Path $pofPath
 if ($pofOk) { $files.Add((Resolve-Path $pofPath).Path) }
+if ($Draft -and -not $pofOk) {
+    $sof = Join-Path $root "VersionB\COMPSYS303_Lab1\output_files\COMPSYS303_Lab1_time_limited.sof"
+    if (Test-Path $sof) { $files.Add($sof) }
+}
 
 $list = $files | Sort-Object -Unique
 $total = 0
-"Submission group_$Group.zip - " + $list.Count + " files" + $(if ($DryRun) { " (dry run)" } else { "" })
+"Submission $zipName - " + $list.Count + " files" + $(if ($DryRun) { " (dry run)" } else { "" })
 foreach ($f in $list) {
     $len = (Get-Item $f).Length
     $total += $len
@@ -76,13 +84,17 @@ if (-not (Test-Path (Join-Path $root "VersionB\evidence\figures"))) { Write-Warn
 if (-not (Test-Path (Join-Path $root "VersionB\evidence\versionA\A_results.txt"))) {
     Write-Warning "No Version A simulation evidence (run VersionB\evidence\versionA\run_versionA_sim.py)."
 }
-if (-not $pofOk) {
+if (-not $pofOk -and $Draft) {
+    Write-Host ""
+    Write-Host "DRAFT: no .pof - the time-limited .sof is packed instead. NOT FOR SUBMISSION." -ForegroundColor Yellow
+} elseif (-not $pofOk) {
     Write-Host ""
     Write-Host "ERROR: .pof NOT FOUND: $pofPath" -ForegroundColor Red
     Write-Host "       Make it on a licensed lab PC (see README.md) and place it there, or pass -Pof <path>." -ForegroundColor Red
+    Write-Host "       (-Draft builds a check package with the time-limited .sof instead.)" -ForegroundColor Red
     if (-not $DryRun) { exit 1 }
 }
-if ($DryRun) { exit $(if ($pofOk) { 0 } else { 1 }) }
+if ($DryRun) { exit $(if ($pofOk -or $Draft) { 0 } else { 1 }) }
 
 Add-Type -AssemblyName System.IO.Compression, System.IO.Compression.FileSystem
 if (Test-Path $Out) { Remove-Item $Out -Confirm:$false }

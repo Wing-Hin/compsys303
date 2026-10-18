@@ -33,3 +33,6 @@ Desktop.ini
 
 # Python byte-code caches
 __pycache__/
+
+# Submission packages (built by VersionB/make_submission.ps1)
+group_*.zip

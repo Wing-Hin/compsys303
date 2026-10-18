@@ -293,10 +293,16 @@ scchart TrafficLight_A {
         // Dynamic mode, the snapshot slips to the next light change.
         state ArmedCheck
             immediate if cameraClock >= CAMERA_DWELL go to NextCameraTick
-            immediate go to NextCameraTick
+            immediate go to ArmedTick
 
         state NextCameraTick
             go to SampleVehicle  // delayed: one vehicle/camera decision per tick
+
+        // Same as NextCameraTick. ArmedCheck's fallback needs its own target: with both
+        // transitions going to NextCameraTick, KIELER generated the same guard for both
+        // and the Camera region stopped after activation (no snapshot, no departure).
+        state ArmedTick
+            go to SampleVehicle
     }
 }
 

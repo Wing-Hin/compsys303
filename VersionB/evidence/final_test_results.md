@@ -30,8 +30,8 @@ checked by `check_board_log.py` (T0).
 | A7 | M | PASS | Request in Task 2, Task 1 green without walk, walk served after returning to Task 2. `versionA/A_results.txt`, trace in `versionA/trace_A7_request_retained_2_1_2.jsonl`. |
 | A8 | M | PASS (Dynamic-mode caveat) | `8,3,1,8,3,1` + LF applied at R-R; phases 8/3/1/8/3/1 s. The commit tick requests no wake-up (sleepT = 1000, KIELER's no-deadline value), so in pure Dynamic mode the new all-red only ends when another tick arrives (the driver polls every 0.1 s when no deadline is requested). `versionA/A_results.txt`, trace in `versionA/trace_A8_A9_task3.jsonl`. |
 | A9 | M | PASS | `1,2,3` + LF in the hold: configRejected 0 -> 1, lights stay 36, nothing applied. `versionA/A_results.txt`, trace in `versionA/trace_A8_A9_task3.jsonl`. |
-| A10 | M | **FAIL** | 'Camera activated' at yellow start, but **no 'Snapshot taken'**: after `ArmedCheck` the Camera region stops (see finding below). With the proposed fix: snapshot exactly 1.0 s after activation. `versionA/A_results.txt`, trace in `versionA/trace_A10_camera_snapshot.jsonl`. |
-| A11 | M | **FAIL** | Same cause: the car leaving after 0.5 s is not seen ('Vehicle left' 0). With the proposed fix: 'Vehicle left' 1, no snapshot. `versionA/A_results.txt`, trace in `versionA/trace_A11_car_leaves_early.jsonl`. |
+| A10 | M | PASS | After the `ArmedTick` fix (approved): car present at yellow -> 'Camera activated' at yellow start, 'Snapshot taken' exactly 1.0 s later; the activation tick requests sleepT = 1 (Dynamic wake-up on time). Before the fix: no snapshot (see finding). `versionA/A_results.txt`, trace in `versionA/trace_A10_camera_snapshot.jsonl`. |
+| A11 | M | PASS | After the fix: car leaves 0.5 s after activation -> 'Vehicle left', no snapshot. Before the fix: departure not seen. `versionA/A_results.txt`, trace in `versionA/trace_A11_car_leaves_early.jsonl`. |
 | A12 | M | PASS | Commit `774e0a2` (Part 2, wording approved): `TrafficLight_VersionA.sctx` now declares Claude (Tasks 1-2) and OpenAI Codex (Task 3 parser, Task 4 camera); `Task1/Task2_VersionA` declare Claude. Open question for the group: `TASK3.md` says Codex assisted with Task 3 "design decisions", while the declaration says all design decisions were made by Harold and Lucas. |
 
 ## B. Version B - static checks
@@ -39,7 +39,7 @@ checked by `check_board_log.py` (T0).
 | ID | P | Status | Evidence |
 |---|---|---|---|
 | B1 | M | PASS | No `clock`, `float`, `deltaT`, `@ClocksUseSD` in code (comments excluded); 32 states, all 59 `go to` transitions (30 distinct targets) resolve. |
-| B2 | M | PASS | `diff_A_B.py`: all 8 time constants equal (A s x 1000 = B ms); after normalising the timing syntax only the 5 lines of the documented `ArmedCheck` state differ. |
+| B2 | M | PASS | `diff_A_B.py`: all 8 time constants equal (A s x 1000 = B ms); after removing the documented A-only camera wake-up block (`ArmedCheck` + its fallback target `ArmedTick`, 6 lines) the normalised charts are identical. |
 | B3 | M | PASS | Committed chart (from `git show HEAD`) compiled with `de.cau.cs.kieler.sccharts.netlist`: exit 0, only "Instantaneous loop detected!". |
 | B4 | M | PASS | All 11 `TickData` fields used by `main.c` exist (EWraised, LEDR, NSraised, cameraActivated, configChar, configReady, configValid, snapshotTaken, task, timerTick, vehicleButton); no `double`. |
 | B5 | M | PASS | Regenerated `TrafficLight_B.c/.h` from the committed chart: byte-identical to the committed files; `pc_test` and the Task 2 scenario outputs identical. |
@@ -113,7 +113,7 @@ A parser change that rejects 0 remains possible with the group's OK.
 * Leaving a Task 3 hold, or a car arriving mid-yellow, happens between two timer events, so the first
   phase (or the camera dwell) afterwards is up to one timer period short (10 ms at 10 ms, 100 ms in E6).
 
-## Finding: Version A camera never takes a snapshot (A10, A11)
+## Finding (fixed): Version A camera never took a snapshot (A10, A11)
 
 * `TrafficLight_VersionA.sctx` (commit `9ceac57` added the `ArmedCheck` state for the Dynamic-mode wake-up).
   `ArmedCheck` has two immediate transitions to the **same** target (`NextCameraTick`), one guarded by the clock
@@ -125,7 +125,9 @@ A parser change that rejects 0 remains possible with the group's OK.
   activation tick requests the wake-up at the end of yellow (sleepT = 2), which is what `ArmedCheck` was meant to fix.
 * Proposed minimal fix (tested on a copy, 10/10 A-tests pass): send `ArmedCheck`'s fallback to a separate state
   `ArmedTick` that is identical to `NextCameraTick` (`go to SampleVehicle`). The activation tick then requests
-  sleepT = 1 and the snapshot comes exactly 1.0 s later. **Not applied: chart change awaiting approval.**
+  sleepT = 1 and the snapshot comes exactly 1.0 s later. **Applied with approval** - A2-A11 now 10/10;
+  A1 recompiles with the same messages; B2 (`diff_A_B.py`) treats ArmedCheck + ArmedTick as the documented
+  A-only block and finds no other difference.
 
 ## Finding: Version A Task 3 commit tick requests no wake-up (A8)
 
