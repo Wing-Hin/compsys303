@@ -37,8 +37,12 @@ Group members: **Harold** (`<full name, UPI>`) and **Lucas** (`<full name, UPI>`
 
 **Program the FPGA**
 
-* Submission image: program the `.pof` into the EPCS64 configuration flash (Active Serial) and
-  power-cycle; no PC connection is needed afterwards.
+* Submission image: program the `.pof` into the EPCS64 configuration flash (Active Serial).
+  The `.pof` holds only the FPGA hardware: after power-up the FPGA loads from flash without
+  programming, but the Nios II program lives in SDRAM, so the lights only cycle after
+  `nios2-download -g traffic_b.elf`.
+  Sequence: power-cycle -> FPGA loads from flash without programming -> `nios2-download` the
+  `.elf` -> lights cycle.
 * Development image: `output_files/COMPSYS303_Lab1_time_limited.sof` (Quartus Lite, OpenCore Plus).
   It only runs **while tethered**: keep `nios2-configure-sof` (or the Quartus Programmer OpenCore Plus
   window) open the whole time.
@@ -91,6 +95,10 @@ Default timing: G 6 s, Y 2 s, all-red 0.5 s, walk 4 s, camera dwell 1 s; one tim
 
 ## Known limitations
 
+* The `.pof` contains only the FPGA hardware. The Nios II reset vector is in SDRAM
+  (`0x00800000`) and the program (about 98 KB) does not fit the 30 KB on-chip RAM, so after
+  power-up the `.elf` must be downloaded over JTAG. Future work: boot the software from flash
+  (an EPCS flash controller plus a boot copier in the Qsys system).
 * The time-limited `.sof` needs the JTAG tether; if the tether is interrupted the Nios II stops (re-configure).
 * JTAG `printf`: with no console attached the HAL buffers about 2 KB of output; after that output is lost
   or `printf` can briefly delay the loop. The lights keep their timing in the tested 50 s without a console.

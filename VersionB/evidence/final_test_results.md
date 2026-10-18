@@ -89,7 +89,7 @@ A parser change that rejects 0 remains possible with the group's OK.
 | ID | Status | Evidence |
 |---|---|---|
 | D1 | PENDING | Lab PC (full licence). |
-| D2 | PENDING | Lab PC. |
+| D2 | PENDING | Lab PC. Check: RUN/PROG -> PROG, Programmer in Active Serial Programming mode, program the `.pof`; RUN/PROG -> RUN; power-cycle -> FPGA loads from flash without programming -> `nios2-download -g traffic_b.elf` -> lights cycle. The `.pof` holds only the hardware; the Nios II program runs from SDRAM. |
 | D3 | PENDING | After D1. |
 | D4 | PASS | `git clone` of commit `774e0a2` into `%TEMP%\cs303_fresh`; Nios II command-line tools only: `nios2-bsp-generate-files --settings=settings.bsp --bsp-dir=.`, `make` (BSP), `make` (traffic_b): 0 errors, 0 warnings, **no manual edits**. Regeneration changed only "Generated:" timestamps and the recorded `BspGeneratedLocation`. ELF section sizes identical to the working-copy build (text 92408, data 7388, bss 388). The Quartus hardware rebuild needs `qsys-generate` first (generated `nios2_system/` HDL is not tracked) - part of D1. |
 | D5 | PASS | `B_D5_fresh_clone.txt`: the fresh-clone ELF ran Task 1 (switches 0x00000): 22 phases at 600/200/50 events, within 0.4 ms; T0 clean. |

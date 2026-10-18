@@ -9,6 +9,7 @@ All times measured on the DE2-115 with timer_1 (50 MHz timestamp) unless noted. 
 |---|---|---|
 | FPGA / CPU | Cyclone IV E EP4CE115F29C7, Nios II/f at 50 MHz, program in SDRAM | `../COMPSYS303_Lab1/nios2_system.sopcinfo`, `../COMPSYS303_Lab1/software/traffic_b_bsp/system.h` |
 | Timer event source | timer_0 (HAL system clock, 1 ms tick), `alt_alarm` every `TIMER_PERIOD_MS` | `../COMPSYS303_Lab1/software/traffic_b/main.c` |
+| Program storage | Reset vector in SDRAM (0x00800000); program about 98 KB; on-chip RAM 30 KB (30720 B); no EPCS flash controller in the Qsys system. So the `.pof` holds only the FPGA hardware and the `.elf` is downloaded over JTAG after power-up | `../COMPSYS303_Lab1/software/traffic_b_bsp/system.h` (ALT_CPU_RESET_ADDR, ONCHIP_MEM_SPAN), `nios2-download` output |
 | Stopwatch | timer_1 timestamp, 32-bit at 50 MHz, wraps every 85.9 s (CONT bit set in `main.c`) | `main.c`, `B_C3_task3_exit.txt` line 12 |
 | ELF size | text 92408 B, data 7388 B, bss 388 B (about 96 KB) | `final_test_results.md` D4 |
 | Build warnings | 0 (BSP and app, also from a fresh clone) | `final_test_results.md` D4 |
@@ -56,6 +57,12 @@ All times measured on the DE2-115 with timer_1 (50 MHz timestamp) unless noted. 
 | Task 3 hold | held 131 s (13097 events; the console prints 45.07 s because the stopwatch wraps at 85.9 s), then resumed at once on SW 00 | `B_C3_task3_exit.txt` line 12 |
 | First green after leaving a hold | 5997.2 ms (600 events; the exit falls between two timer events) | `B_C3_task3_exit.txt` |
 | Task 3 UART packets on the board | not tested - no RS-232 / USB-serial cable | `final_test_results.md` C3 |
+
+## Future work
+
+| Item | Reason | Source |
+|---|---|---|
+| Boot the software from flash (EPCS controller + boot copier) | the board currently needs `nios2-download` after power-up | `../COMPSYS303_Lab1/nios2_system.qsys` (no EPCS controller), `system.h` |
 
 ## Verification
 
