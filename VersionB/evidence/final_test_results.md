@@ -22,16 +22,16 @@ checked by `check_board_log.py` (T0).
 | ID | P | Status | Evidence |
 |---|---|---|---|
 | A1 | M | PASS | KIELER CLI, netlist C and netlist simulation C systems, committed charts: 0 errors. Messages: "Instantaneous loop detected!" (expected) and "ValuedObject ...SD is contained in the model but not in VariableStore" for the clocks' sleep-deadline helpers (`cSD`, `wNSSD`, `wEWSD`, `cameraClockSD`) - informational: those helpers are not listed in the simulator's data table. |
-| A2 | M | PENDING | Needs a KIELER Dynamic-mode trace (no `.ktrace` in the repo). |
-| A3 | M | PENDING | as A2 |
-| A4 | M | PENDING | as A2 |
-| A5 | S | PENDING | as A2 |
-| A6 | M | PENDING | as A2 |
-| A7 | M | PENDING | as A2 |
-| A8 | M | PENDING | as A2 |
-| A9 | M | PENDING | as A2 |
-| A10 | M | PENDING | as A2 |
-| A11 | M | PENDING | as A2 |
+| A2 | M | PASS | Real-time Dynamic stepping, 2 cycles: 33,34,36,12,20,36 x2 at 6/2/0.5/6/2/0.5 s, errors +0.1..+0.6 ms (PC sleep jitter). `versionA/A_results.txt`, trace in `versionA/trace_A2_task1_realtime.jsonl`. |
+| A3 | M | PASS | NS press in R-G -> next G-R 97 for 4.0 s, then 33. `versionA/A_results.txt`, trace in `versionA/trace_A3_ns_press_in_RG.jsonl`. |
+| A4 | M | PASS | EW press in G-R -> next R-G 140 for 4.0 s, then 12. `versionA/A_results.txt`, trace in `versionA/trace_A4_ew_press_in_GR.jsonl`. |
+| A5 | S | PASS | Press during its own G-R: that green 6.0 s without walk, walk at the next G-R. `versionA/A_results.txt`, trace in `versionA/trace_A5_press_in_own_green.jsonl`. |
+| A6 | M | PASS | Task 1 -> 2 set mid-green (t = 10.5 s): activeTask changed at t = 16.5 s, on the tick entering R-R (LEDR 20 -> 36). `versionA/A_results.txt`, trace in `versionA/trace_A6_task_change_mid_green.jsonl`. |
+| A7 | M | PASS | Request in Task 2, Task 1 green without walk, walk served after returning to Task 2. `versionA/A_results.txt`, trace in `versionA/trace_A7_request_retained_2_1_2.jsonl`. |
+| A8 | M | PASS (Dynamic-mode caveat) | `8,3,1,8,3,1` + LF applied at R-R; phases 8/3/1/8/3/1 s. The commit tick requests no wake-up (sleepT = 1000, KIELER's no-deadline value), so in pure Dynamic mode the new all-red only ends when another tick arrives (the driver polls every 0.1 s when no deadline is requested). `versionA/A_results.txt`, trace in `versionA/trace_A8_A9_task3.jsonl`. |
+| A9 | M | PASS | `1,2,3` + LF in the hold: configRejected 0 -> 1, lights stay 36, nothing applied. `versionA/A_results.txt`, trace in `versionA/trace_A8_A9_task3.jsonl`. |
+| A10 | M | **FAIL** | 'Camera activated' at yellow start, but **no 'Snapshot taken'**: after `ArmedCheck` the Camera region stops (see finding below). With the proposed fix: snapshot exactly 1.0 s after activation. `versionA/A_results.txt`, trace in `versionA/trace_A10_camera_snapshot.jsonl`. |
+| A11 | M | **FAIL** | Same cause: the car leaving after 0.5 s is not seen ('Vehicle left' 0). With the proposed fix: 'Vehicle left' 1, no snapshot. `versionA/A_results.txt`, trace in `versionA/trace_A11_car_leaves_early.jsonl`. |
 | A12 | M | PASS | Commit `774e0a2` (Part 2, wording approved): `TrafficLight_VersionA.sctx` now declares Claude (Tasks 1-2) and OpenAI Codex (Task 3 parser, Task 4 camera); `Task1/Task2_VersionA` declare Claude. Open question for the group: `TASK3.md` says Codex assisted with Task 3 "design decisions", while the declaration says all design decisions were made by Harold and Lucas. |
 
 ## B. Version B - static checks
@@ -112,3 +112,23 @@ A parser change that rejects 0 remains possible with the group's OK.
 * Task 3 values are integer seconds and must be at least 1 s (0 s skips yellow/all-red, see X1).
 * Leaving a Task 3 hold, or a car arriving mid-yellow, happens between two timer events, so the first
   phase (or the camera dwell) afterwards is up to one timer period short (10 ms at 10 ms, 100 ms in E6).
+
+## Finding: Version A camera never takes a snapshot (A10, A11)
+
+* `TrafficLight_VersionA.sctx` (commit `9ceac57` added the `ArmedCheck` state for the Dynamic-mode wake-up).
+  `ArmedCheck` has two immediate transitions to the **same** target (`NextCameraTick`), one guarded by the clock
+  (`cameraClock >= CAMERA_DWELL`). KIELER's netlist code for it is
+  `_g200 = ... || (_g203 && _cg205) || (_g203 && _cg205) || ...` - the fallback should be `(_g203 && !_cg205)`.
+  While the clock is below 1 s the region therefore never re-enters `NextCameraTick`: the Camera region stops after
+  'Camera activated', so no snapshot and no departure are ever seen.
+* Before `ArmedCheck` (commit `732f462`) the snapshot works (1 s after activation with deltaT = 1) but the
+  activation tick requests the wake-up at the end of yellow (sleepT = 2), which is what `ArmedCheck` was meant to fix.
+* Proposed minimal fix (tested on a copy, 10/10 A-tests pass): send `ArmedCheck`'s fallback to a separate state
+  `ArmedTick` that is identical to `NextCameraTick` (`go to SampleVehicle`). The activation tick then requests
+  sleepT = 1 and the snapshot comes exactly 1.0 s later. **Not applied: chart change awaiting approval.**
+
+## Finding: Version A Task 3 commit tick requests no wake-up (A8)
+
+On the tick that applies a valid packet the chart leaves sleepT at KIELER's default 1000 s, so in pure Dynamic mode the
+new all-red ends only when another tick happens (an input change or a manual step). With manual/periodic stepping
+(as `TASK3.md` describes) the timings are correct. Documented; no change proposed yet.

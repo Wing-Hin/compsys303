@@ -105,4 +105,34 @@ legend('Location', 'southoutside');
 exportgraphics(f, fullfile(here, 'd_camera_dwell.png'), 'Resolution', 200);
 close(f);
 
+%% (e) Version A (KIELER simulator, real time) vs Version B (DE2-115) phase errors
+aFile = fullfile(here, '..', 'versionA', 'A2_realtime_phases.csv');
+if isfile(aFile)
+    A = readtable(aFile, 'TextType', 'string');
+    trans = ["33->34", "34->36", "36->12", "12->20", "20->36", "36->33"];
+    aMean = zeros(6, 1); aLo = aMean; aHi = aMean; bMean = aMean; bLo = aMean; bHi = aMean;
+    for p = 1:6
+        r = string(A.from) + "->" + string(A.to) == trans(p);
+        e = A.error_ms(r);
+        aMean(p) = mean(e); aLo(p) = mean(e) - min(e); aHi(p) = max(e) - mean(e);
+        rb = P.experiment == "E2b 10 ms" & P.ledr == trans(p);
+        bMean(p) = P.mean_error_ms(rb);
+        bLo(p) = P.mean_ms(rb) - P.min_ms(rb); bHi(p) = P.max_ms(rb) - P.mean_ms(rb);
+    end
+    f = figure('Visible', 'off', 'Position', [100 100 900 520]);
+    theme(f, 'light');
+    b = bar([aMean bMean], 'grouped'); hold on; grid on; box on;
+    errorbar(b(1).XEndPoints, aMean, aLo, aHi, 'k.', 'HandleVisibility', 'off');
+    errorbar(b(2).XEndPoints, bMean, bLo, bHi, 'k.', 'HandleVisibility', 'off');
+    set(gca, 'XTickLabel', phaseNames, 'XTickLabelRotation', 20);
+    ylabel('Measured - intended (ms)'); xlabel('Phase');
+    title('(e) Phase error: Version A (simulator) vs Version B (board)');
+    legend(["Version A: KIELER simulator, Dynamic stepping in real time on the PC (A2)", ...
+            "Version B: DE2-115, 10 ms timer events (E2b)"], 'Location', 'southoutside');
+    exportgraphics(f, fullfile(here, 'e_versionA_vs_versionB.png'), 'Resolution', 200);
+    close(f);
+else
+    disp('Version A data not found: figure (e) skipped');
+end
+
 disp('figures written');

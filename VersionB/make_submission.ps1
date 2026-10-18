@@ -13,7 +13,7 @@ Included (repository-relative paths are kept inside the zip):
   * nios2_system.sopcinfo
   * the .pof (default VersionB/COMPSYS303_Lab1/output_files/COMPSYS303_Lab1.pof) - REQUIRED
   * VersionB/evidence/ (board logs, B_summary.md, final_test_results.md, figures/, scripts)
-    and Version A traces/check_ktrace.py wherever they are found under evidence/
+    including versionA/ (headless KIELER simulation of Version A: A_results.txt, traces)
   * VersionB/nios/ PC test sources (main.c copy, pc_test.c, pc_suite.c, pc_suite_print.h)
 Excluded everywhere: db/, incremental_db/, .metadata/, obj/, Hello_lab1*, _to_delete/,
   board_test output, TASK3_EDGE_RESULTS.md, __pycache__/.
@@ -73,8 +73,8 @@ foreach ($f in $list) {
 "{0,10:N0}  bytes in total ({1:N1} MB, uncompressed)" -f $total, ($total / 1MB)
 
 if (-not (Test-Path (Join-Path $root "VersionB\evidence\figures"))) { Write-Warning "evidence\figures\ not found (Part 9 creates it)." }
-if (-not (Get-ChildItem -Path (Join-Path $root "VersionB\evidence") -Recurse -Filter "*.ktrace" -ErrorAction SilentlyContinue)) {
-    Write-Warning "No Version A .ktrace traces under VersionB\evidence\ (and no check_ktrace.py)."
+if (-not (Test-Path (Join-Path $root "VersionB\evidence\versionA\A_results.txt"))) {
+    Write-Warning "No Version A simulation evidence (run VersionB\evidence\versionA\run_versionA_sim.py)."
 }
 if (-not $pofOk) {
     Write-Host ""

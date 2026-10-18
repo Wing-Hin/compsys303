@@ -75,3 +75,15 @@ All times measured on the DE2-115 with timer_1 (50 MHz timestamp) unless noted. 
 | Fresh-clone build | builds with no manual edits; same ELF section sizes | `final_test_results.md` D4 |
 | Board inputs | board-only test passed; live JTAG trace: SW0 -> 0x00001, SW17 -> 0x20000, KEY0 -> keys 0x6 (original image) | `board_input_test.txt` |
 | Test status | per test ID | `final_test_results.md` |
+
+## Version A (headless KIELER simulation)
+
+| Fact | Value | Source |
+|---|---|---|
+| Simulator | KIELER's own *Netlist-based Simulation (C)* (`de.cau.cs.kieler.sccharts.simulation.netlist.c`), built from the committed chart | `versionA/run_versionA_sim.py` |
+| A-tests on the committed chart | 8 / 10 pass; A10 and A11 fail (camera region stops after activation) | `versionA/A_results.txt` |
+| A-tests with the proposed `ArmedTick` fix (copy) | 10 / 10 pass | `final_test_results.md`, finding |
+| Version A phase error, real-time Dynamic stepping on the PC | +0.1 .. +0.6 ms (always late: the host wakes after the deadline) | `versionA/A2_realtime_phases.csv`, `figures/e_versionA_vs_versionB.png` |
+| Version B phase error at 10 ms | about -0.3 .. +0.4 ms, centred on 0 | `figures/phases.csv` (E2b) |
+| Camera dwell in Version A (fixed copy) | exactly 1.0 s in simulated time | `final_test_results.md` A10 |
+| Task 3 commit tick wake-up | none requested (sleepT = 1000, KIELER's default) | `versionA/trace_A8_A9_task3.jsonl` |
