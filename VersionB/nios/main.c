@@ -28,15 +28,24 @@
 #include <sys/alt_alarm.h>
 #include <sys/alt_timestamp.h>
 #include <altera_avalon_pio_regs.h>
-#include "sccharts.h"            /* the generated header, pasted from KIELER */
+#include <altera_avalon_timer_regs.h>
 
 /* ---------------------------------------------------------------------------
- * Which chart is pasted into sccharts.c / sccharts.h:
- *   1 = Task1_VersionB.sctx           (timerTick, LEDR)
- *   2 = Task2_VersionB.sctx           (+ NSraised, EWraised)
- *   4 = TrafficLight_VersionB.sctx    (Tasks 1-4: + task, UART config, camera)
+ * Which chart is linked in. Copy the matching generated pair from kieler-gen\
+ * (named after the scchart) into this project, and only that pair:
+ *   1 = Task1_VersionB.sctx         -> Task1_TrafficLight_B.c / .h
+ *   2 = Task2_VersionB.sctx         -> Task2_PedestrianTrafficLight_B.c / .h
+ *   4 = TrafficLight_VersionB.sctx  -> TrafficLight_B.c / .h   (Tasks 1-4)
  * ------------------------------------------------------------------------- */
 #define CHART 4
+
+#if CHART == 1
+#include "Task1_TrafficLight_B.h"
+#elif CHART == 2
+#include "Task2_PedestrianTrafficLight_B.h"
+#else
+#include "TrafficLight_B.h"
+#endif
 
 /* The C-side copy of the timer rate. Keep it equal to TIMER_MS in the chart.
  * Changing ONLY this value is the brief's "rescale" check (Section 2.1).     */
@@ -85,6 +94,12 @@ int main(void)
     /* Independent stopwatch for the evidence log (timer_1 as timestamp timer) */
     alt_u32 tsPerUs = 1;
     if (alt_timestamp_start() >= 0) {
+        /* The HAL starts timer_1 one-shot: it counts down 2^32 cycles (85.9 s at
+         * 50 MHz) once and then stops, so every later reading is the same. Set
+         * CONT so it reloads and keeps running; unsigned differences of
+         * alt_timestamp() then stay correct for any interval below 85.9 s. */
+        IOWR_ALTERA_AVALON_TIMER_CONTROL(TIMER_1_BASE,
+            ALTERA_AVALON_TIMER_CONTROL_CONT_MSK | ALTERA_AVALON_TIMER_CONTROL_START_MSK);
         tsPerUs = alt_timestamp_freq() / 1000000u;
     } else {
         printf("No timestamp timer: set hal.timestamp_timer = timer_1 in the BSP\n");

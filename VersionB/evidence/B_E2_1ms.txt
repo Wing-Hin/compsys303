@@ -1,0 +1,37 @@
+# 2026-10-18 22:44:28 +1300 | DE2-115 Nios II, traffic_b.elf | raw nios2-terminal output below
+# Settings: chart TrafficLight_VersionB.sctx TIMER_MS = 1 | main.c TIMER_PERIOD_MS = 1, CHART = 4
+# Tested: E2a: Task 1 (SW1..0 read as 00), no buttons, >= 3 full cycles at a 1 ms timer
+nios2-terminal: connected to hardware target using JTAG UART on cable
+nios2-terminal: "USB-Blaster [USB-0]", device 1, instance 0
+nios2-terminal: (Use the IDE stop button or Ctrl-C to terminate)
+
+Version B running: timer event every 1 ms
+LEDR  -1 ->  33 | previous phase      508 us |       1 ticks |      0 timer events
+LEDR  33 ->  34 | previous phase  6000795 us |   12899 ticks |   6000 timer events
+LEDR  34 ->  36 | previous phase  1999752 us |    4261 ticks |   2000 timer events
+LEDR  36 ->  12 | previous phase   499831 us |    1061 ticks |    500 timer events
+LEDR  12 ->  20 | previous phase  6000310 us |   12804 ticks |   6000 timer events
+LEDR  20 ->  36 | previous phase  1999780 us |    4260 ticks |   2000 timer events
+LEDR  36 ->  33 | previous phase   500049 us |    1062 ticks |    500 timer events
+LEDR  33 ->  34 | previous phase  6000163 us |   12898 ticks |   6000 timer events
+LEDR  34 ->  36 | previous phase  1999695 us |    4260 ticks |   2000 timer events
+LEDR  36 ->  12 | previous phase   500281 us |    1062 ticks |    500 timer events
+LEDR  12 ->  20 | previous phase  6000091 us |   12805 ticks |   6000 timer events
+LEDR  20 ->  36 | previous phase  1999968 us |    4260 ticks |   2000 timer events
+LEDR  36 ->  33 | previous phase   500054 us |    1062 ticks |    500 timer events
+LEDR  33 ->  34 | previous phase  5999601 us |   12896 ticks |   6000 timer events
+LEDR  34 ->  36 | previous phase  2000019 us |    4261 ticks |   2000 timer events
+LEDR  36 ->  12 | previous phase   500075 us |    1062 ticks |    500 timer events
+LEDR  12 ->  20 | previous phase  6000093 us |   12805 ticks |   6000 timer events
+LEDR  20 ->  36 | previous phase  2000215 us |    4262 ticks |   2000 timer events
+LEDR  36 ->  33 | previous phase   499914 us |    1061 ticks |    500 timer events
+LEDR  33 ->  34 | previous phase  5999757 us |   12897 ticks |   6000 timer events
+LEDR  34 ->  36 | previous phase  2000073 us |    4262 ticks |   2000 timer events
+LEDR  36 ->  12 | previous phase   500072 us |    1062 ticks |    500 timer events
+LEDR  12 ->  20 | previous phase  6000001 us |   12804 ticks |   6000 timer events
+LEDR  20 ->  36 | previous phase  2000154 us |    4261 ticks |   2000 timer events
+LEDR  36 ->  33 | previous phase   500056 us |    1062 ticks |    500 timer events
+LEDR  33 ->  34 | previous phase  5999838 us |   12898 ticks |   6000 timer events
+LEDR  34 ->  36 | previous phase  2000132 us |    4261 ticks |   2000 timer events
+LEDR  36 ->  12 | previous phase   499678 us |    1061 ticks |    500 timer events
+LEDR  12 ->  20 | previous phase  6000150 us |   12805 ticks |   6000 timer events

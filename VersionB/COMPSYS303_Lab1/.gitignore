@@ -1,0 +1,32 @@
+# Quartus build caches and reports (regenerated on every compile)
+db/
+incremental_db/
+output_files/*.rpt
+output_files/*.summary
+output_files/*.smsg
+output_files/*.jdi
+output_files/*.pin
+output_files/*.sld
+output_files/*.done
+output_files/*.json
+*.qws
+*.qsf.bak
+.qsys_edit/
+
+# Platform Designer generated HDL (regenerate from nios2_system.qsys)
+nios2_system/
+
+# Eclipse / Nios II SBT workspace metadata
+.metadata/
+workspace/
+RemoteSystemsTempFiles/
+
+# Nios II build outputs (keep sources, Makefiles, settings.bsp)
+software/*/obj/
+software/*/*.elf
+software/*/*.map
+software/*/*.objdump
+software/*_bsp/libhal_bsp.a
+
+# Local tool settings
+.claude/
