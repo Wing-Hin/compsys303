@@ -199,21 +199,15 @@ All phases: 167802 ticks, 7650 timer events, 2193 ticks/s, 21.93 ticks per event
 
 ## Restore check: defaults after E6
 
-File `B_restored_10ms_after_E6.txt`: chart TIMER_MS = 10, main.c TIMER_PERIOD_MS = 10, 9 phases, 1 program start(s).
+File `B_restored_10ms_after_E6.txt`: chart TIMER_MS = 10, main.c TIMER_PERIOD_MS = 10, 15 phases, 1 program start(s).
 
 | Phase | LEDR | Intended ms (events) | n | Mean ms | Min ms | Max ms | Mean error ms | Jitter ms | Mean ticks | Mean events | Ticks/event | Idle share |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| G-R  NS green | 33->34 | 6000 (600) | 2 | 6000.191 | 5999.915 | 6000.467 | 0.191 | 0.552 | 13106.5 | 600.0 | 21.84 | 95.42 % |
-| Y-R  NS yellow | 34->36 | 2000 (200) | 2 | 1999.931 | 1999.917 | 1999.946 | -0.069 | 0.029 | 4370.0 | 200.0 | 21.85 | 95.42 % |
-| R-R  after NS | 36->12 | 500 (50) | 2 | 499.981 | 499.978 | 499.983 | -0.019 | 0.005 | 1085.0 | 50.0 | 21.70 | 95.39 % |
-| R-G  EW green | 12->20 | 6000 (600) | 1 | 6000.029 | 6000.029 | 6000.029 | 0.029 | 0.000 | 13067.0 | 600.0 | 21.78 | 95.41 % |
-| R-Y  EW yellow | 20->36 | 2000 (200) | 1 | 2000.039 | 2000.039 | 2000.039 | 0.039 | 0.000 | 4356.0 | 200.0 | 21.78 | 95.41 % |
-| R-R  after EW | 36->33 | 500 (50) | 1 | 500.082 | 500.082 | 500.082 | 0.082 | 0.000 | 1088.0 | 50.0 | 21.76 | 95.40 % |
+| G-R  NS green | 33->34 | 6000 (600) | 3 | 6000.169 | 5999.915 | 6000.467 | 0.169 | 0.552 | 13101.0 | 600.0 | 21.84 | 95.42 % |
+| Y-R  NS yellow | 34->36 | 2000 (200) | 3 | 1999.916 | 1999.884 | 1999.946 | -0.084 | 0.062 | 4370.0 | 200.0 | 21.85 | 95.42 % |
+| R-R  after NS | 36->12 | 500 (50) | 3 | 499.998 | 499.978 | 500.034 | -0.002 | 0.056 | 1085.0 | 50.0 | 21.70 | 95.39 % |
+| R-G  EW green | 12->20 | 6000 (600) | 2 | 6000.087 | 6000.029 | 6000.146 | 0.087 | 0.117 | 13067.0 | 600.0 | 21.78 | 95.41 % |
+| R-Y  EW yellow | 20->36 | 2000 (200) | 2 | 1999.888 | 1999.736 | 2000.039 | -0.112 | 0.303 | 4355.5 | 200.0 | 21.78 | 95.41 % |
+| R-R  after EW | 36->33 | 500 (50) | 2 | 500.032 | 499.982 | 500.082 | 0.032 | 0.100 | 1088.0 | 50.0 | 21.76 | 95.40 % |
 
-All phases: 55634 ticks, 2550 timer events, 2182 ticks/s, 21.82 ticks per event, 95.42 % of ticks without a timer event.
-
-## B_functional_retest_summary
-
-File `B_functional_retest_summary.txt`: chart TIMER_MS = 10, main.c TIMER_PERIOD_MS = 10, 0 phases, 0 program start(s).
-
-No phase lines found.
+All phases: 92689 ticks, 4250 timer events, 2181 ticks/s, 21.81 ticks per event, 95.41 % of ticks without a timer event.

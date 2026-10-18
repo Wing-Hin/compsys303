@@ -74,6 +74,12 @@ EXPERIMENTS = {
 }
 
 
+def is_raw_log(path):
+    """Only raw console logs: their first line says so (summaries are skipped)."""
+    with path.open(encoding="utf-8", errors="replace") as f:
+        return "raw nios2-terminal output" in f.readline()
+
+
 def chart_constants():
     """Read the time-out constants from the chart (TIMER_MS comes from each log header)."""
     text = CHART.read_text(encoding="utf-8")
@@ -141,7 +147,7 @@ def summarise(consts):
            "Intended = ceil(T / TIMER_MS) * TIMER_PERIOD_MS. "
            "Error = mean measured - intended. Jitter = max - min. "
            "Idle share = ticks that carried no timer event / all ticks.", ""]
-    logs = sorted(HERE.glob("B_*.txt"),
+    logs = sorted((p for p in HERE.glob("B_*.txt") if is_raw_log(p)),
                   key=lambda p: list(EXPERIMENTS).index(p.stem) if p.stem in EXPERIMENTS else 99)
     for path in logs:
         timer_ms, period_ms, phases, dwells, restarts = parse_log(path)
