@@ -14,8 +14,9 @@
  *     GR 600, YR 200, RR 50, RG 600, RY 200, RR 50 events per phase
  * (the very first phase can show one extra event, see the guide).
  *
- * AI Use Declaration: written with the assistance of a generative AI tool
- * (Claude, Anthropic), reviewed and run by Harold and Lucas.
+ * AI Use Declaration: The design and all design decisions were made by Harold and Lucas.
+ * This PC rehearsal harness was written with the assistance of a generative AI tool
+ * (Claude, Anthropic), then reviewed, tested and verified by Harold and Lucas.
  */
 #include <stdio.h>
 #include <string.h>

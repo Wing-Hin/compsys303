@@ -15,7 +15,8 @@
  * (ticks computed vs events counted) is logged for the Section 4 comparison.
  *
  * AI Use Declaration: The design and all design decisions were made by Harold and Lucas.
- * This glue code was written with the assistance of a generative AI tool (Claude,
+ * This glue code (timer interrupt and event queue, input sampling, UART feed and
+ * evidence logging) was written with the assistance of a generative AI tool (Claude,
  * Anthropic), then reviewed, tested and verified by Harold and Lucas on the DE2-115.
  */
 

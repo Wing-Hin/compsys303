@@ -3,7 +3,9 @@
 // of the inputs on HEX0 (segments are active low), independent of the Nios II:
 //   HEX0[3:0] (a,b,c,d) lit while SW[3:0] is up
 //   HEX0[6:4] (g,f,e)   lit while KEY[2:0] is held
-// AI Use Declaration: written with the assistance of Claude (Anthropic).
+// AI Use Declaration: The design and all design decisions were made by Harold and Lucas.
+// This diagnostic top level was written with the assistance of a generative AI tool
+// (Claude, Anthropic), then reviewed, tested and verified by Harold and Lucas.
 module COMPSYS303_Lab1_diag (
     input         CLOCK_50,
     input  [3:0]  KEY,

@@ -6,7 +6,11 @@
 // Send only when configReady was true after the previous tick. LF ends a
 // packet; CR is ignored. See TASK3.md for the protocol and simulation cases.
 //
-// AI-use provenance: the original Part 1 files declare Claude assistance.
+// AI Use Declaration: The design and all design decisions were made by Harold and Lucas.
+// The Task 1 and Task 2 SCChart code was written with the assistance of Claude
+// (Anthropic); the Task 3 configuration parser and the Task 4 camera logic were
+// written with the assistance of OpenAI Codex. All of it was then reviewed,
+// simulated, tested and verified by Harold and Lucas in KIELER.
 
 @ClocksUseSD
 scchart TrafficLight_A {

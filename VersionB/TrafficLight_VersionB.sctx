@@ -33,10 +33,10 @@
 //  LEDR7..0 <- LEDR, print(...) -> JTAG UART console.
 //
 // AI Use Declaration: The design and all design decisions were made by Harold
-// and Lucas. The SCChart code was written with the assistance of generative AI
-// tools (this Version B conversion: Claude, Anthropic; the Task 3 and Task 4
-// logic carried over from Version A: OpenAI Codex), then reviewed, simulated
-// and verified by Harold and Lucas in KIELER and on the DE2-115.
+// and Lucas. The Version B conversion (timer-event counting) was written with the
+// assistance of Claude (Anthropic); the Task 3 and Task 4 logic carried over from
+// Version A was written with the assistance of OpenAI Codex. All of it was then
+// reviewed, tested and verified by Harold and Lucas in KIELER and on the DE2-115.
 // =====================================================================
 scchart TrafficLight_B {
 

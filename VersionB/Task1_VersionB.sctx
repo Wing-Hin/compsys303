@@ -17,8 +17,9 @@
 //  RR2 -> GR, closes the cycle (as in Version A).
 //
 // AI Use Declaration: The design and all design decisions were made by Harold and Lucas.
-// The SCChart code was written with the assistance of a generative AI tool (Claude,
-// Anthropic), then reviewed, simulated and verified by Harold and Lucas.
+// The SCChart code (the Version B conversion of Task 1) was written with the
+// assistance of a generative AI tool (Claude, Anthropic), then reviewed, tested and
+// verified by Harold and Lucas.
 // =====================================================================
 scchart Task1_TrafficLight_B {
 

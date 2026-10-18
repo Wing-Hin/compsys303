@@ -18,9 +18,9 @@ number of timer events, times the real timer period:
     intended = events * TIMER_PERIOD_MS    (main.c side, the real alarm rate)
 which covers quantisation (E3) and the main.c-only rescale (E4).
 
-AI Use Declaration: The experiment design and all decisions were made by Harold and Lucas.
-This script was written with the assistance of a generative AI tool (Claude, Anthropic),
-then reviewed and run by Harold and Lucas.
+AI Use Declaration: The design and all design decisions were made by Harold and Lucas.
+This analysis script was written with the assistance of a generative AI tool (Claude,
+Anthropic), then reviewed, tested and verified by Harold and Lucas.
 """
 
 import math

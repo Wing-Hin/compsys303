@@ -11,7 +11,7 @@
 
 // AI Use Declaration: The design and all design decisions were made by Harold and Lucas.
 // The SCChart code was written with the assistance of a generative AI tool (Claude,
-// Anthropic), then reviewed, simulated and verified by Harold and Lucas in KIELER.
+// Anthropic), then reviewed, simulated, tested and verified by Harold and Lucas in KIELER.
 
 // =====================================================================
 @ClocksUseSD
