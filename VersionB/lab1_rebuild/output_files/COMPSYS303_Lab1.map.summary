@@ -1,0 +1,14 @@
+Analysis & Synthesis Status : Successful - Sun Oct 18 23:31:28 2026
+Quartus Prime Version : 18.1.0 Build 625 09/12/2018 SJ Lite Edition
+Revision Name : COMPSYS303_Lab1
+Top-level Entity Name : COMPSYS303_Lab1_diag
+Family : Cyclone IV E
+Total logic elements : 5,630
+    Total combinational functions : 4,438
+    Dedicated logic registers : 3,287
+Total registers : 3287
+Total pins : 110
+Total virtual pins : 0
+Total memory bits : 310,656
+Embedded Multiplier 9-bit elements : 6
+Total PLLs : 1

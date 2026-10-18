@@ -1,0 +1,25 @@
+# 2026-10-19 01:06:38 +1300 | DE2-115 Nios II, traffic_b.elf | raw nios2-terminal output below
+# Settings: chart TrafficLight_VersionB.sctx TIMER_MS = 10 | main.c TIMER_PERIOD_MS = 10, CHART = 4
+# Tested: D5: traffic_b.elf built from a fresh git clone (commit 774e0a2) in C:\Users\harol\AppData\Local\Temp/cs303_fresh; Task 1 (switches = 0x00000 by JTAG read 01:06:02)
+nios2-terminal: connected to hardware target using JTAG UART on cable
+nios2-terminal: "USB-Blaster [USB-0]", device 1, instance 0
+nios2-terminal: (Use the IDE stop button or Ctrl-C to terminate)
+
+LEDR  34 ->  36 | previous phase  1999787 us |    4388 ticks |  Version B running: timer event every 10 ms
+LEDR  -1 ->  33 | previous phase      471 us |       1 ticks |      0 timer events
+LEDR  33 ->  34 | previous phase  6000119 us |   13168 ticks |    600 timer events
+LEDR  34 ->  36 | previous phase  1999777 us |    4388 ticks |    200 timer events
+LEDR  36 ->  12 | previous phase   499994 us |    1092 ticks |     50 timer events
+LEDR  12 ->  20 | previous phase  6000213 us |   13170 ticks |    600 timer events
+LEDR  20 ->  36 | previous phase  1999844 us |    4377 ticks |    200 timer events
+LEDR  36 ->  33 | previous phase   500364 us |    1093 ticks |     50 timer events
+LEDR  33 ->  34 | previous phase  5999737 us |   13168 ticks |    600 timer events
+LEDR  34 ->  36 | previous phase  2000256 us |    4390 ticks |    200 timer events
+LEDR  36 ->  12 | previous phase   500009 us |    1092 ticks |     50 timer events
+LEDR  12 ->  20 | previous phase  5999698 us |   13170 ticks |    600 timer events
+LEDR  20 ->  36 | previous phase  2000204 us |    4378 ticks |    200 timer events
+LEDR  36 ->  33 | previous phase   499814 us |    1092 ticks |     50 timer events
+LEDR  33 ->  34 | previous phase  6000044 us |   13166 ticks |    600 timer events
+LEDR  34 ->  36 | previous phase  1999891 us |    4389 ticks |    200 timer events
+LEDR  36 ->  12 | previous phase   500043 us |    1092 ticks |     50 timer events
+LEDR  12 ->  20 | previous phase  5999885 us |   13171 ticks |    600 timer events
