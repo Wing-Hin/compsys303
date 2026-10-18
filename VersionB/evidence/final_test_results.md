@@ -15,7 +15,7 @@ checked by `check_board_log.py` (T0).
 
 | ID | P | Status | Evidence |
 |---|---|---|---|
-| T0 | M | PASS | `check_board_log.py` over all 13 raw logs: 0 violations (680 phases). Negative test with a synthetic bad log: all 6 violation kinds detected (count, change, value, safety, short all-red, 97->34 without a commit); a synthetic Task 3 commit log is accepted. |
+| T0 | M | PASS | `check_board_log.py` over all 20 raw board logs (after Part 6): 1854 phases, 0 violations. Negative test with a synthetic bad log: all 6 violation kinds detected (count, change, value, safety, short all-red, 97->34 without a commit); a synthetic Task 3 commit log is accepted. |
 
 ## A. Version A - simulator regression
 
@@ -64,24 +64,25 @@ A parser change that rejects 0 remains possible with the group's OK.
 | C1.3 | M | PASS | T0 over every B log: 0 violations. |
 | C2.1 | M | PASS | `B_functional_retest.txt`: `36 -> 97`, `97 -> 33` after 400 events. |
 | C2.2 | M | PASS | `B_functional_retest.txt`: `36 -> 140`, `140 -> 12` after 400 events. |
-| C2.3 | M | PENDING | Part 6. |
-| C2.4 | S | PENDING | Part 6. |
-| C2.5 | S | PENDING | Part 6. |
-| C2.6 | M | PENDING | Part 6. |
-| C3.1 | M | PASS | `B_functional_retest_task3.txt` (switches 0x00002): no change after `34 -> 36` for ~55 s; console then showed the hold ended at 55.3 s (14120 events) when SW0 was raised. |
-| C3.2-C3.8 | M/S | PENDING | Needs an RS-232 / USB-serial cable (this PC has no COM port). |
+| C2.3 | M | PASS | `B_C2_task2.txt` (switches 0x00001): KEY0+KEY1 together at the all-red -> `36 -> 140`/`140 -> 12` (400) then `36 -> 97`/`97 -> 33` (400) in the next green. A first attempt registered only KEY1 (edge capture 0x6, no KEY0 bit) and correctly gave only the EW walk. |
+| C2.4 | S | PASS | `B_C2_task2.txt`: KEY0 held 3 s in R-G -> one NS walk (400 events); the next two NS greens plain `36 -> 33`. |
+| C2.5 | S | PASS | `B_C2_task2.txt`: KEY0 during an NS green without a walk -> that green `33 -> 34` after 600 (no walk), next NS green `36 -> 97`. Note: a press while the walk light is already on is absorbed by the running walk (nsServed is updated when the walk ends). |
+| C2.6 | M | PASS | `B_C2_task2.txt`: request made, Task 1 active (0 walks in lines 245-297; Task 1 tick rate), SW0 back up -> first Task 2 NS green `36 -> 97`, `97 -> 33` after 400 events. |
+| C3.1 | M | PASS | `B_functional_retest_task3.txt` (switches 0x00002): no change after `34 -> 36` for ~55 s (the end of that hold was seen on an unlogged console only); re-confirmed in `B_C3_task3_exit.txt`: hold of 13097 events (131 s), left at once on SW 00. |
+| C3.2-C3.6, C3.8 | M/S | PENDING - needs cable | No RS-232 / USB-serial adapter: this PC has no COM port. Parser behaviour covered on the PC by S11-S19. |
+| C3.7 | M | PASS | `B_C3_task3_exit.txt` (switches 0x00002): hold at 36 (13097 events = 131 s), SW 00 -> left at once, then 600/200/50/600/200/50 with the default (last committed) time-outs. The first green after the hold is 5997.2 ms: leaving the hold happens between two timer events (same quantisation as E6 ii). |
 | C4.1 | M | PASS | `B_functional_retest_task4.txt`: Camera activated, Snapshot taken, dwell 999207 us. |
 | C4.2 | M | PASS | same file: `Vehicle left`. |
 | C4.3 | M | PASS | same file: Camera activated, Vehicle left, no snapshot. |
 | C4.4 | S | PASS | `B_E6_camera_100ms_yellow.txt`: 959.5 / 944.0 / 936.1 ms (band 900-1000); `B_E6_camera_100ms.txt`: armed at yellow start 999.07-999.31 ms. |
-| C4.5 | S | PENDING | Part 6. |
-| C4.6 | M | PENDING | Part 6. |
-| C4.7 | M | PENDING | Part 6. |
-| C5.1 | M | PENDING | Part 6. |
-| C5.2 | M | PENDING | Part 6. |
-| C5.3 | M | PENDING | Part 6 (15 min unattended). |
-| C5.4 | S | PENDING | Part 6. |
-| C5.5 | N | PENDING | Part 6. |
+| C4.5 | S | PASS | `B_C4_task4.txt` (switches 0x00003): one car, Camera activated + Snapshot taken (999.3 ms) at the first yellow, then 4 more yellows with no camera messages. |
+| C4.6 | M | PASS | `B_C4_task4.txt`: car entered while Task 1 was active - no camera messages over several yellows; CPU state read by gdb afterwards (vehiclePresent 1); on returning to Task 4 the car was photographed at the first yellow (`12 -> 20`, 998.9 ms), proving it was tracked but ignored in Task 1. |
+| C4.7 | M | PASS | `B_C4_task4.txt`: in Task 4, KEY0 -> `36 -> 97`/`97 -> 33` (400), KEY1 -> `36 -> 140`/`140 -> 12` (400). |
+| C5.1 | M | PASS | `B_C5_modes.txt`: mid-green change 4 -> 3: the green (600) and yellow (200) finished, the hold began only at the all-red; 3 -> 1 left the hold; 1 -> 2, 2 -> 4, 4 -> 1 mid-green: legal sequence throughout (T0: 0 violations), the task-specific loop rate changes only after an all-red. The tick rate is too noisy to time each change exactly; the exact rule is proven on the PC (S9). |
+| C5.2 | M | PASS | `B_C5_modes.txt`: KEY3 during an EW green -> new `Version B running`, `-1 -> 33`, full 600-event G-R, normal cycle. |
+| C5.3 | M | PASS | `B_C5_15min.txt`: 324 phases over 918 s (15.3 min) unattended, one program start (no freeze/reset); every phase within -0.41..+0.43 ms of nominal, the last 20 within 0.34 ms (well after the 85.9 s stopwatch period, so the timer_1 fix holds); stopwatch sum 918.0 s = 91800 events x 10 ms; T0 clean. |
+| C5.4 | S | PASS | `B_C5_modes.txt`: about 30 s of random KEY0-KEY2 presses in Task 4: both walks and a snapshot served, no freeze, T0 0 violations. |
+| C5.5 | N | PASS (limitation noted) | `B_C5_console.txt`: console closed 01:54:06 for ~50 s: no freeze, timing exact, and the buffered output (~50 s) was delivered on re-attach with no gap. The HAL JTAG UART buffer is finite (default 2 KB, about 70 s of output): beyond that output is dropped or printf briefly delays the loop - documented limitation. |
 
 ## D. Submission readiness
 
@@ -91,11 +92,23 @@ A parser change that rejects 0 remains possible with the group's OK.
 | D2 | PENDING | Lab PC. |
 | D3 | PENDING | After D1. |
 | D4 | PASS | `git clone` of commit `774e0a2` into `%TEMP%\cs303_fresh`; Nios II command-line tools only: `nios2-bsp-generate-files --settings=settings.bsp --bsp-dir=.`, `make` (BSP), `make` (traffic_b): 0 errors, 0 warnings, **no manual edits**. Regeneration changed only "Generated:" timestamps and the recorded `BspGeneratedLocation`. ELF section sizes identical to the working-copy build (text 92408, data 7388, bss 388). The Quartus hardware rebuild needs `qsys-generate` first (generated `nios2_system/` HDL is not tracked) - part of D1. |
-| D5 | PENDING | Part 7. |
-| D6 | PENDING | Part 8. |
+| D5 | PASS | `B_D5_fresh_clone.txt`: the fresh-clone ELF ran Task 1 (switches 0x00000): 22 phases at 600/200/50 events, within 0.4 ms; T0 clean. |
+| D6 | PASS | Top-level `README.md`: SW1..0 = task, KEY0/KEY1/KEY2, KEY3 = reset, LEDR bits, RS-232 115200 8N1 + packet format, JTAG console, "Version A = simulator, Version B = board", known limitations. Group members' full names and UPIs still to fill in. |
 | D7 | PASS | Commit `774e0a2`: AI Use Declaration in all 5 charts, both `main.c` (identical), `pc_test.c`, `pc_suite.c`, `pc_suite_print.h`, `analyse_logs.py`, `check_board_log.py`, `diff_A_B.py`, `board_test.v`, `COMPSYS303_Lab1_diag.v`. The KIELER-generated `TrafficLight_B.c/.h` carry none (regenerated files; to be stated in the README). |
-| D8 | PENDING | Part 8. |
-| D9 | PENDING | Part 8. |
+| D8 | PENDING | `VersionB/make_submission.ps1 -DryRun`: 216 files, 1.8 MB (5 charts - no 6th exists; traffic_b + traffic_b_bsp without obj/; sopcinfo; README; evidence incl. figures). Fails loudly until the `.pof` exists; group number N still needed. |
+| D9 | PASS | Dry-run list contains no `db/`, `incremental_db/`, `.metadata/`, `obj/`, `Hello_lab1*`, `_to_delete/`, board_test outputs or `TASK3_EDGE_RESULTS.md`. |
 | D10 | PENDING | Report (group). |
 | D11 | PENDING | Group. |
 | D12 | PENDING | Part 9. |
+
+## Known limitations found while testing
+
+* The microsecond stopwatch (timer_1, 32-bit at 50 MHz) wraps every 85.9 s, so a **single** phase longer
+  than that (a Task 3 hold) is reported 85.9 s short in the console; its timer-event count is correct.
+* The JTAG UART output is buffered by the HAL (about 2 KB); with no console attached for longer than
+  that, output is lost or `printf` can briefly delay the loop.
+* The time-limited (OpenCore Plus) `.sof` stops the Nios II if the JTAG tether is interrupted (seen
+  once at 00:13: Quartus Error 209059); re-configuring the `.sof` restores it.
+* Task 3 values are integer seconds and must be at least 1 s (0 s skips yellow/all-red, see X1).
+* Leaving a Task 3 hold, or a car arriving mid-yellow, happens between two timer events, so the first
+  phase (or the camera dwell) afterwards is up to one timer period short (10 ms at 10 ms, 100 ms in E6).
