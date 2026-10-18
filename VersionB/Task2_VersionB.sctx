@@ -1,0 +1,154 @@
+// =====================================================================
+//  COMPSYS 303 Assignment - Task 2
+//  Pedestrian Traffic Light Controller - Version B (external Nios II timer,
+//  multiform time)
+//
+//  Same regions, states and LED words as Task2_VersionA.sctx. Only the
+//  timing mechanism differs: there are no clocks. main.c raises the input
+//  timerTick on a tick that carries one Nios II timer event, and every timed
+//  activity counts those events in its own counter:
+//    c         phase counter (Lights)          - T1..T6
+//    wNS, wEW  walk counters, local to a green - WALK_TIME
+//  A time-out is reached when counter * TIMER_MS >= time-out. Counters are
+//  reset on entry and incremented by a (non-immediate) during action, so the
+//  event that caused a change is not counted again by the new state.
+//
+//  Three concurrent regions: Lights (the Task 1 cycle, each walk phase a
+//  sub-machine inside its green state), plus NSRequest and EWRequest, which
+//  count button presses. Shared variables have one writer each; Lights reads
+//  the request counters via pre(), i.e. on the tick after they are written.
+//
+//  The one delayed transition of the main cycle is RR2 -> GR (as in Version A).
+//
+//  Board mapping (main.c with CHART 2): KEY0 -> NSraised, KEY1 -> EWraised,
+//  LEDR7..0 <- LEDR.
+//
+// AI Use Declaration: The design and all design decisions were made by Harold and Lucas.
+// The SCChart code (the Version B conversion of Task 2) was written with the
+// assistance of a generative AI tool (Claude, Anthropic), then reviewed, tested and
+// verified by Harold and Lucas.
+// =====================================================================
+scchart Task2_PedestrianTrafficLight_B {
+
+    // ---------- Version B: the single named rate of the external timer ----------
+    const int TIMER_MS = 10   // ms between two timer events; must equal TIMER_PERIOD_MS in main.c
+
+    // ---------- Configurability (Section 3): time-outs in milliseconds ----------
+    const int T1 = 6000   // G-R  NS green,  EW red
+    const int T2 = 2000   // Y-R  NS yellow, EW red
+    const int T3 = 500    // R-R  all red (after NS)
+    const int T4 = 6000   // R-G  NS red,   EW green
+    const int T5 = 2000   // R-Y  NS red,   EW yellow
+    const int T6 = 500    // R-R  all red (after EW)
+    const int WALK_TIME = 4000    // pedestrian walk phase (< green time)
+
+    // ---------- Table 1: lamp bits of the red LED word ----------
+    const int NS_G = 1, NS_Y = 2, NS_R = 4, EW_G = 8, EW_Y = 16, EW_R = 32
+    const int NS_PED = 64, EW_PED = 128   // bits 6 and 7: the pedestrian lights
+
+    // ---------- Reactive interface ----------
+    input  bool timerTick             // true on a tick carrying one timer event (Version B time reference)
+    input  bool NSraised, EWraised    // pedestrian request buttons (events)
+    output int  LEDR = 33    // 8 red LEDs: lamps (5..0), NS walk (6), EW walk (7); 33 = G-R
+
+    // ---------- Shared variables (single writer each; Lights reads via pre) ----------
+    int nsRequests = 0, ewRequests = 0  // presses counted, written by NSRequest / EWRequest only
+    int nsServed = 0,   ewServed = 0  // presses served, written and read by Lights only
+
+    // ---------- Time (multiform): the phase counter ----------
+    output int c = 0        // timer events counted since the current phase was entered
+
+    // ------------------------------------------------------------------
+    region Lights {
+
+        initial state GR "G-R: NS green, EW red" {
+            int wNS = 0                             // NS walk counter, local to this green
+            entry do c = 0; LEDR = EW_R + NS_G      // 33; the walk states add / remove bit 6
+            during if timerTick do c++              // not on the entry tick
+
+            region NSWalk {
+                initial state DecideNS
+                    immediate if pre(nsRequests) > nsServed
+                        do nsServed = pre(nsRequests); wNS = 0 go to WalkNS   // request pending
+                    immediate if !(pre(nsRequests) > nsServed) go to NoWalkNS
+
+                state WalkNS "NS walk light on" {
+                    entry do LEDR = EW_R + NS_G + NS_PED    // 97
+                    during if timerTick do wNS++            // second counter on the same event stream
+                }
+                immediate if wNS * TIMER_MS >= WALK_TIME do nsServed = pre(nsRequests) go to NoWalkNS
+
+                state NoWalkNS "NS walk light off" {
+                    entry do LEDR = EW_R + NS_G          // 33
+                }
+            }
+        }
+        immediate if c * TIMER_MS >= T1 go to YR
+
+        state YR "Y-R: NS yellow, EW red" {
+            entry do c = 0; LEDR = EW_R + NS_Y // 34: whole word rewritten, so the NS walk bit is off
+            during if timerTick do c++
+        }
+        immediate if c * TIMER_MS >= T2 go to RR1
+
+        state RR1 "R-R: all red" {
+            entry do c = 0; LEDR = EW_R + NS_R // 36
+            during if timerTick do c++
+        }
+        immediate if c * TIMER_MS >= T3 go to RG
+
+        state RG "R-G: NS red, EW green" {
+            int wEW = 0     // EW walk counter, local to this green
+            entry do c = 0; LEDR = EW_G + NS_R    // 12; the walk states add / remove bit 7
+            during if timerTick do c++
+
+            region EWWalk {
+                initial state DecideEW
+                    immediate if pre(ewRequests) > ewServed
+                        do ewServed = pre(ewRequests); wEW = 0 go to WalkEW
+                    immediate if !(pre(ewRequests) > ewServed) go to NoWalkEW
+
+                state WalkEW "EW walk light on" {
+                    entry do LEDR = EW_G + NS_R + EW_PED    // 140
+                    during if timerTick do wEW++
+                }
+                immediate if wEW * TIMER_MS >= WALK_TIME do ewServed = pre(ewRequests) go to NoWalkEW
+
+                state NoWalkEW "EW walk light off" {
+                    entry do LEDR = EW_G + NS_R   // 12
+                }
+            }
+        }
+        immediate if c * TIMER_MS >= T4 go to RY
+
+        state RY "R-Y: NS red, EW yellow" {
+            entry do c = 0; LEDR = EW_Y + NS_R  // 20: whole word rewritten, so the EW walk bit is off
+            during if timerTick do c++
+        }
+        immediate if c * TIMER_MS >= T5 go to RR2
+
+        state RR2 "R-R: all red" {
+            entry do c = 0; LEDR = EW_R + NS_R  // 36
+            during if timerTick do c++
+        }
+        if c * TIMER_MS >= T6 go to GR  // the ONE delayed transition of the cycle
+    }
+
+    // ------------------------------------------------------------------
+    region NSRequest {
+        initial state ReleasedNS
+            immediate if NSraised do nsRequests++ go to PressedNS  // one request per press
+
+        state PressedNS "NS button held"
+            if !NSraised go to ReleasedNS  // delayed: closes this loop
+    }
+
+    // ------------------------------------------------------------------
+    region EWRequest {
+        initial state ReleasedEW
+            immediate if EWraised do ewRequests++ go to PressedEW
+
+        state PressedEW "EW button held"
+            if !EWraised go to ReleasedEW // delayed: closes this loop
+    }
+}

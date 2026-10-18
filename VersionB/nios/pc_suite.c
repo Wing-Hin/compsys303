@@ -1,5 +1,5 @@
 /*
- * COMPSYS 303 Version B - scripted PC test suite (test B8, cases S1-S29).
+ * COMPSYS 303 Version B - scripted PC test suite (test B8, cases S1-S30).
  *
  * Drives the KIELER-generated TrafficLight_B code exactly as main.c does on the
  * Nios II, with no board and no human:
@@ -19,7 +19,8 @@
  *   ./pc_suite          (exit code 0 = every case passed)
  *
  * Default time-outs at TIMER_MS = 10: G 600, Y 200, R-R 50, walk 400,
- * camera dwell 100 timer events.
+ * camera dwell 100 timer events. Task 3 packet values are milliseconds
+ * (1..9999); a 0 field makes the packet invalid.
  *
  * AI Use Declaration: The design and all design decisions were made by Harold and Lucas.
  * This test suite was written with the assistance of a generative AI tool (Claude,
@@ -402,7 +403,7 @@ static const int CFG_8_3_1[6][3] = {{12, 20, 800}, {20, 36, 300}, {36, 33, 100},
 static void S11(void)
 {
     CHECK(enterTask3Hold(), "no Task 3 hold");
-    send("8,3,1,8,3,1\n");
+    send("8000,3000,1000,8000,3000,1000\n");
     CHECK(waitTr(36, 12, LONG), "not resumed after a valid packet");
     CHECK(d.configApplied == 1 && napplied == 1 && appliedLEDR[0] == 36, "commit not at R-R");
     CHECK(d.t1 == 8000 && d.t2 == 3000 && d.t3 == 1000 && d.t4 == 8000 && d.t5 == 3000 && d.t6 == 1000,
@@ -414,7 +415,7 @@ static void S11(void)
 static void S12(void)
 {
     CHECK(enterTask3Hold(), "no Task 3 hold");
-    send("8,3,1,8,3,1\r\n");
+    send("8000,3000,1000,8000,3000,1000\r\n");
     CHECK(waitTr(36, 12, LONG), "not resumed after a CRLF packet");
     CHECK(d.configApplied == 1 && d.configRejected == 0, "applied %d rejected %d", d.configApplied, d.configRejected);
     expectPhases(CFG_8_3_1, 6, "CRLF 8,3,1");
@@ -423,9 +424,10 @@ static void S12(void)
 
 static void S13(void)
 {
-    static const char *pk[5] = {"1,2,3\n", "1,2,3,4,5,6,7\n", "12345,1,1,1,1,1\n", "1,,1,1,1,1\n", "a,1,1,1,1,1\n"};
+    static const char *pk[7] = {"1,2,3\n", "1,2,3,4,5,6,7\n", "12345,1,1,1,1,1\n", "1,,1,1,1,1\n", "a,1,1,1,1,1\n",
+                                "0,1000,1000,1000,1000,1000\n", "1000,1000,1000,1000,1000,0000\n"};
     CHECK(enterTask3Hold(), "no Task 3 hold");
-    for (int k = 0; k < 5; k++) {
+    for (int k = 0; k < 7; k++) {
         int r0 = d.configRejected;
         send(pk[k]);
         runTicks(3 * (long) strlen(pk[k]) + 100);
@@ -440,7 +442,7 @@ static void S13(void)
 static void S14(void)
 {
     CHECK(enterTask3Hold(), "no Task 3 hold");
-    send("zz9,,\n8,3,1,8,3,1\n");
+    send("zz9,,\n8000,3000,1000,8000,3000,1000\n");
     CHECK(waitTr(36, 12, LONG), "did not recover");
     CHECK(d.configRejected == 1 && d.configApplied == 1 && d.t1 == 8000, "rejected %d applied %d t1 %d",
           d.configRejected, d.configApplied, d.t1);
@@ -450,9 +452,9 @@ static void S14(void)
 static void S15(void)
 {
     CHECK(enterTask3Hold(), "no Task 3 hold");
-    send("0008,03,1,8,3,1\n");
+    send("0800,0300,0100,8000,3000,1000\n");
     CHECK(waitTr(36, 12, LONG), "leading-zero packet not applied");
-    CHECK(d.t1 == 8000 && d.t2 == 3000 && d.t3 == 1000 && d.t4 == 8000, "time-outs %d %d %d %d", d.t1, d.t2, d.t3, d.t4);
+    CHECK(d.t1 == 800 && d.t2 == 300 && d.t3 == 100 && d.t4 == 8000, "time-outs %d %d %d %d", d.t1, d.t2, d.t3, d.t4);
     CHECK_RULES();
 }
 
@@ -460,12 +462,12 @@ static void S16(void)
 {
     static const int seq[4][3] = {{33, 34, 800}, {34, 36, 300}, {36, 12, 100}, {12, 20, 200}};
     CHECK(enterTask3Hold(), "no Task 3 hold");
-    send("8,3,1,8,3,1\n");
+    send("8000,3000,1000,8000,3000,1000\n");
     CHECK(waitTr(36, 33, LONG), "no G-R after the first packet");
     runTicks(100);
-    send("2,1,1,2,1,1\n");                           /* during green */
+    send("2000,1000,1000,2000,1000,1000\n");                           /* during green */
     runTicks(300);
-    CHECK(d.pending1 == 2 && d.t1 == 8000 && d.configApplied == 1, "applied before the next R-R (t1 %d)", d.t1);
+    CHECK(d.pending1 == 2000 && d.t1 == 8000 && d.configApplied == 1, "applied before the next R-R (t1 %d)", d.t1);
     expectPhases(seq, 4, "packet during green");
     CHECK(d.configApplied == 2 && appliedLEDR[1] == 36, "second commit not at R-R");
     CHECK_RULES();
@@ -475,9 +477,9 @@ static void S17(void)
 {
     simReset(); taskIn = 1;
     runTicks(100);
-    send("8,3,1,8,3,1\n");                           /* received while still in Task 1 */
+    send("8000,3000,1000,8000,3000,1000\n");                           /* received while still in Task 1 */
     runTicks(300);
-    CHECK(d.pending1 == 8 && d.configApplied == 0 && d.t1 == 6000, "applied in Task 1");
+    CHECK(d.pending1 == 8000 && d.configApplied == 0 && d.t1 == 6000, "applied in Task 1");
     taskIn = 3;
     CHECK(waitTr(-2, 36, LONG), "no R-R");
     CHECK(waitTr(36, -2, 2000), "held instead of applying the waiting packet");
@@ -489,7 +491,7 @@ static void S17(void)
 static void S18(void)
 {
     CHECK(enterTask3Hold(), "no Task 3 hold");
-    send("8,3,1,8,3,1\n");
+    send("8000,3000,1000,8000,3000,1000\n");
     CHECK(waitTr(36, 12, LONG), "first packet not applied");
     taskIn = 1;
     CHECK(waitTr(-2, 36, LONG) && waitTr(36, -2, LONG) && d.activeTask == 1, "did not leave Task 3");
@@ -500,7 +502,7 @@ static void S18(void)
         runTicks(20000);
         CHECK(ntr == n && d.LEDR == 36 && d.waitingConfig, "re-entered Task 3 without waiting for a new packet");
     }
-    send("2,1,1,2,1,1\n");
+    send("2000,1000,1000,2000,1000,1000\n");
     CHECK(waitTr(36, -2, LONG) && d.t1 == 2000 && d.configApplied == 2, "new packet not applied");
     CHECK_RULES();
 }
@@ -509,9 +511,9 @@ static void S19(void)
 {
     simReset(); taskIn = 1;
     runTicks(100);
-    send("8,3,1,8,3,1\n2,1,1,2,1,1\n");               /* second packet straight after the first */
+    send("8000,3000,1000,8000,3000,1000\n2000,1000,1000,2000,1000,1000\n");               /* second packet straight after the first */
     runTicks(500);
-    CHECK(d.pending1 == 8 && d.configReady == 0 && uartPos == 12,
+    CHECK(d.pending1 == 8000 && d.configReady == 0 && uartPos == 30,
           "second packet not blocked (pending1 %d, ready %d, consumed %d)", d.pending1, d.configReady, (int) uartPos);
     taskIn = 3;
     runEvents(3000);
@@ -659,11 +661,13 @@ static void randomRun(long ticks, int allowZero, long *nTr, int *nCommit)
         if (r % 700 == 2 && !ewHold) ewHold = 1 + rnd() % 30;
         if (r % 900 == 3 && !carHold) carHold = 1 + rnd() % 30;
         if (r % 4000 == 4 && uartPos == uartLen) {
-            if (rnd() % 10 < 7) {                                /* well-formed packet */
-                int lo = allowZero ? 0 : 1;
+            if (rnd() % 10 < 7) {                                /* well-formed packet (ms) */
+                /* green 1000..9999, yellow 1..3999, all-red 1..2999 ms; with allowZero
+                 * about one field in five is 0, which must make the packet invalid */
+#define RV(lo, span) ((allowZero && rnd() % 5 == 0) ? 0 : (lo) + (int) (rnd() % (span)))
                 snprintf(pkt, sizeof pkt, "%d,%d,%d,%d,%d,%d\n",
-                         lo + (int) (rnd() % 12), lo + (int) (rnd() % 4), lo + (int) (rnd() % 3),
-                         lo + (int) (rnd() % 12), lo + (int) (rnd() % 4), lo + (int) (rnd() % 3));
+                         RV(1000, 9000), RV(1, 3999), RV(1, 2999), RV(1000, 9000), RV(1, 3999), RV(1, 2999));
+#undef RV
             } else {                                             /* garbage line */
                 int n = 1 + rnd() % 20, k;
                 for (k = 0; k < n; k++) pkt[k] = junk[rnd() % (sizeof junk - 1)];
@@ -699,13 +703,17 @@ static void S29(void)
     CHECK_RULES();
 }
 
-/* Extra (not in the plan): configuration values of 0 seconds. */
-static void X1(void)
+/* Was the informational X1: packets with 0 fields used to skip yellow /
+ * all-red. A 0 field now makes the packet invalid, so the rules must hold. */
+static void S30(void)
 {
     long n; int c;
     randomRun(1000000L, 1, &n, &c);
-    printf("      zero-second time-outs allowed: %ld rule violation(s) in %ld changes, first: %s\n",
-           violations, n, violations ? firstViolation : "-");
+    printf("      %ld LEDR changes, %d commits, %d rejects (packets with 0 fields among them), seed 303\n",
+           n, c, d.configRejected);
+    CHECK(n > 200 && c > 0 && d.configRejected > 0, "random run exercised too little");
+    CHECK(d.t1 > 0 && d.t2 > 0 && d.t3 > 0 && d.t4 > 0 && d.t5 > 0 && d.t6 > 0, "a 0 time-out was applied");
+    CHECK_RULES();
 }
 
 /* ------------------------------------------------------------------ */
@@ -724,7 +732,7 @@ static const Case cases[] = {
     {"S10", "task = 0, 5, 99: current mode kept", S10},
     {"S11", "Task 3 valid packet: 800/300/100", S11},
     {"S12", "Task 3 CRLF packet: same as S11", S12},
-    {"S13", "Task 3 five invalid packets rejected", S13},
+    {"S13", "Task 3 seven invalid packets (two with 0) rejected", S13},
     {"S14", "Task 3 garbage then valid packet", S14},
     {"S15", "Task 3 leading zeros", S15},
     {"S16", "Task 3 packet during green: next R-R", S16},
@@ -741,6 +749,7 @@ static const Case cases[] = {
     {"S27", "Task 4 button held 50 ticks: one press", S27},
     {"S28", "1,000,000 random ticks: T0 rules hold", S28},
     {"S29", "No timer events: lights never change", S29},
+    {"S30", "1,000,000 random ticks, 0 fields: rejected, rules hold", S30},
 };
 
 int main(void)
@@ -756,8 +765,6 @@ int main(void)
         printf("       -> %s\n", caseFails ? "FAIL" : "PASS");
         if (caseFails) totalFail++; else totalPass++;
     }
-    printf("  X1   (extra, informational) random run with 0-second time-outs\n");
-    X1();
     printf("\nTOTAL: %d passed, %d failed, of %d\n", totalPass, totalFail, n);
     return totalFail ? 1 : 0;
 }

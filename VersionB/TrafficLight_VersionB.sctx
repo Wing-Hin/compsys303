@@ -25,8 +25,8 @@
 //      transition that closes the loop instead.
 //
 //  Configuration: ASCII character sequence on configChar, configValid per tick,
-//  packet "#,#,#,#,#,#\n" in integer SECONDS (same packets as Version A),
-//  converted to milliseconds when committed.
+//  packet "#,#,#,#,#,#\n" in integer MILLISECONDS, 1..9999 (same packets as
+//  Version A); applied as they are, since Version B time-outs are milliseconds.
 //
 //  Board mapping is in main.c: SW1..0 -> task, KEY0 -> NSraised,
 //  KEY1 -> EWraised, KEY2 -> vehicleButton, RS-232 -> configChar,
@@ -52,7 +52,6 @@ scchart TrafficLight_B {
     const int T6 = 500      // R-R  all red (after EW)
     const int WALK_TIME = 4000      // green-state exit also ends the walk phase
     const int CAMERA_DWELL = 1000   // allowed vehicle dwell after camera activation
-    const int MS_PER_S = 1000       // packet values (seconds) -> active time-outs (ms)
 
     // Named defaults above remain constants; active values must be writable.
     output int t1 = T1, t2 = T2, t3 = T3, t4 = T4, t5 = T5, t6 = T6
@@ -153,10 +152,10 @@ scchart TrafficLight_B {
 
         state RR1Config
             immediate if activeTask >= 3 && pre(configSequence) != configApplied
-                do t1 = pre(pending1) * MS_PER_S; t2 = pre(pending2) * MS_PER_S; t3 = pre(pending3) * MS_PER_S;
-                   t4 = pre(pending4) * MS_PER_S; t5 = pre(pending5) * MS_PER_S; t6 = pre(pending6) * MS_PER_S;
+                do t1 = pre(pending1); t2 = pre(pending2); t3 = pre(pending3);
+                   t4 = pre(pending4); t5 = pre(pending5); t6 = pre(pending6);
                    configApplied = pre(configSequence); waitingConfig = false; c = 0
-                go to RR1Wait  // keep all-red visible for the commit tick, even if t3 = 0
+                go to RR1Exit  // c = 0 < t3 (every value >= 1 ms): all-red stays, and the guard sets the wake-up
             immediate go to RR1Exit
 
         state RR1Exit
@@ -214,10 +213,10 @@ scchart TrafficLight_B {
 
         state RR2Config
             immediate if activeTask >= 3 && pre(configSequence) != configApplied
-                do t1 = pre(pending1) * MS_PER_S; t2 = pre(pending2) * MS_PER_S; t3 = pre(pending3) * MS_PER_S;
-                   t4 = pre(pending4) * MS_PER_S; t5 = pre(pending5) * MS_PER_S; t6 = pre(pending6) * MS_PER_S;
+                do t1 = pre(pending1); t2 = pre(pending2); t3 = pre(pending3);
+                   t4 = pre(pending4); t5 = pre(pending5); t6 = pre(pending6);
                    configApplied = pre(configSequence); waitingConfig = false; c = 0
-                go to RR2Wait  // keep all-red visible for the commit tick, even if t6 = 0
+                go to RR2Exit  // c = 0 < t6 (every value >= 1 ms): all-red stays, and the guard sets the wake-up
             immediate go to RR2Exit
 
         state RR2Exit
@@ -248,7 +247,8 @@ scchart TrafficLight_B {
             if !EWraised go to ReleasedEW                             // delayed: closes this loop
     }
 
-    // Independent streaming parser: exactly six 1-4 digit unsigned values.
+    // Independent streaming parser: exactly six 1-4 digit values, 1..9999 ms.
+    // A 0 field is rejected: a zero yellow or all-red would skip that safety phase.
     // A malformed packet is discarded through LF, then parsing can recover.
     // One mailbox provides backpressure: no second packet can overwrite it.
     // Untimed, therefore identical to Version A.
@@ -258,7 +258,7 @@ scchart TrafficLight_B {
 
         state Classify
             immediate if configChar == CR go to NextCharacter
-            immediate if configChar == LF && !badPacket && field == 5 && digits > 0
+            immediate if configChar == LF && !badPacket && field == 5 && digits > 0 && number > 0
                 do pending1 = staged1; pending2 = staged2; pending3 = staged3;
                    pending4 = staged4; pending5 = staged5; pending6 = number;
                    configSequence++; configReady = false;
@@ -271,19 +271,19 @@ scchart TrafficLight_B {
             immediate if configChar >= ASCII_ZERO && configChar <= ASCII_NINE && digits < MAX_DIGITS
                 do number *= 10; number += configChar - ASCII_ZERO; digits++
                 go to NextCharacter
-            immediate if configChar == COMMA && digits > 0 && field == 0
+            immediate if configChar == COMMA && digits > 0 && number > 0 && field == 0
                 do staged1 = number; field++; digits = 0; number = 0
                 go to NextCharacter
-            immediate if configChar == COMMA && digits > 0 && field == 1
+            immediate if configChar == COMMA && digits > 0 && number > 0 && field == 1
                 do staged2 = number; field++; digits = 0; number = 0
                 go to NextCharacter
-            immediate if configChar == COMMA && digits > 0 && field == 2
+            immediate if configChar == COMMA && digits > 0 && number > 0 && field == 2
                 do staged3 = number; field++; digits = 0; number = 0
                 go to NextCharacter
-            immediate if configChar == COMMA && digits > 0 && field == 3
+            immediate if configChar == COMMA && digits > 0 && number > 0 && field == 3
                 do staged4 = number; field++; digits = 0; number = 0
                 go to NextCharacter
-            immediate if configChar == COMMA && digits > 0 && field == 4
+            immediate if configChar == COMMA && digits > 0 && number > 0 && field == 4
                 do staged5 = number; field++; digits = 0; number = 0
                 go to NextCharacter
             // Empty fields, fifth digits, extra commas and other characters.
