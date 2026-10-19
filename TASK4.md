@@ -92,10 +92,12 @@ expires; use `deltaT = 0.25` for finer control. Expect no snapshot.
   VariableStore warning. GCC compiled the tested generated code successfully.
 - The existing Task 3 first-tick character issue remains: initialize with
   `configValid = false` before sending a packet.
-- This is Version A using clocks. Version B's Nios II timer-event implementation
-  is still required for the final assignment. Negative/non-finite elapsed time,
-  hardware debounce, and zero-duration yellow phases are not camera guarantees.
-  Use positive yellow durations so a yellow phase is observable to the camera.
+- This is Version A using clocks. The Version B (Nios II timer-event) camera is
+  in `VersionB/TrafficLight_VersionB.sctx` and was tested on the DE2-115 (see
+  `VersionB/evidence/final_test_results.md`, C4 and R1). Negative/non-finite
+  elapsed time and hardware debounce are not camera guarantees. Zero-duration
+  yellow phases cannot occur: a Task 3 packet with a 0 field is rejected.
 
-Task 4 design, implementation, documentation and checks were assisted by
-OpenAI Codex. Review the design choices and record assistance accurately.
+All design decisions for Task 4 were made by Harold and Lucas. Its code,
+documentation and checks were written with the assistance of OpenAI Codex, then
+reviewed, tested and verified by Harold and Lucas.

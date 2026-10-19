@@ -22,6 +22,8 @@ as Version B (counts the Nios II timer event, runs on the board). Same states, r
 | `VersionB/COMPSYS303_Lab1/` | Quartus project (Lab 1 Nios II system), `nios2_system.qsys/.sopcinfo`, `README_VersionB.md` |
 | `VersionB/COMPSYS303_Lab1/software/traffic_b/` | Nios II application: `main.c` + KIELER-generated `TrafficLight_B.c/.h` |
 | `VersionB/COMPSYS303_Lab1/software/traffic_b_bsp/` | Nios II BSP (`settings.bsp`) |
+| `VersionB/COMPSYS303_Lab1/output_files/COMPSYS303_Lab1_time_limited.sof` | The FPGA image all board tests used (see *Programming files*) |
+| `VersionB/run_board.bat` | One command: program the `.sof`, `nios2-download -g traffic_b.elf`, `nios2-terminal` |
 | `VersionB/nios/` | PC tools: `pc_test.c` (Task 1 rehearsal), `pc_suite.c` (30 scripted cases, combined chart) |
 | `VersionB/evidence/` | Board logs `B_*.txt`, `B_summary.md`, `final_test_results.md`, `report_facts.md`, analysis scripts, `figures/` |
 | `VersionB/evidence/versionA/` | Version A evidence: headless KIELER simulation (`run_versionA_sim.py`), results and traces |
@@ -40,19 +42,51 @@ as Version B (counts the Nios II timer event, runs on the board). Same states, r
    below), `vehicleButton` (Task 4, each rising edge toggles enter/leave). See `TASK3.md` and `TASK4.md`
    for worked step sequences.
 
+## Programming files
+
+The submission contains `VersionB/COMPSYS303_Lab1/output_files/COMPSYS303_Lab1_time_limited.sof`
+and **no `.pof`**.
+
+* **Why there is no `.pof`.** We compile with Quartus Prime 18.1 **Lite Edition**, and the Lab 1
+  system uses the **Nios II/f** core (`impl = Fast` in `nios2_system.sopcinfo`), which needs a Nios II
+  licence. Without one, Quartus builds the core under OpenCore Plus (Intel FPGA IP Evaluation Mode):
+  the only output is a time-limited `*_time_limited.sof` that runs only while the programmer stays
+  connected over JTAG (tethered). A `.pof` cannot be made from it.
+* **A `.pof` would not hold the program anyway.** A `.pof` only configures the FPGA from the EPCS64
+  flash. The Nios II reset vector is in SDRAM (`0x00800000`) and the program (about 98 KB) does not
+  fit the 30 KB on-chip RAM, so after every power-up `traffic_b.elf` has to be downloaded over JTAG
+  in any case.
+* **It is the tested build.** Every board log in `VersionB/evidence/` used this file: SHA-256
+  `d11cd8f5e0924dc9990390fe9c7be95e8af5f9531cff8bd0cc3a2c47c62e6a10`, Quartus checksum `0x008CFF92`,
+  assembled Fri 21 Aug 2026 14:38:23 (NZST). It was compiled from the Platform Designer generation of
+  7 Aug 2026 17:34:53, generation ID `1786080893`, which is the `AUTO_GENERATION_ID` in the
+  `nios2_system.sopcinfo` in this zip (and the `GENERATION_ID` in that compile's `.sld`/`.jdi`).
+  `make_submission.ps1 -Sof` refuses to pack any other `.sof` or `.sopcinfo`.
+
+**Steps** (Quartus Prime 18.1, Lite is enough, with the Nios II EDS):
+
+1. Board powered, USB-Blaster cable in the BLASTER port, RUN/PROG switch on RUN.
+2. Quartus **Programmer** (*Tools > Programmer*): *Hardware Setup* -> **USB-Blaster**, mode **JTAG**.
+3. *Add File* -> `VersionB/COMPSYS303_Lab1/output_files/COMPSYS303_Lab1_time_limited.sof`, tick
+   *Program/Configure*, *Start*; wait for 100 % (Successful).
+4. The **OpenCore Plus** dialog opens. **Keep it open** the whole time: closing it (or unplugging the
+   cable) stops the Nios II.
+5. Nios II Command Shell, in `VersionB/COMPSYS303_Lab1/software/traffic_b`:
+   `nios2-download -g traffic_b.elf`
+6. `nios2-terminal` for the console (Ctrl-C leaves it; the lights keep running).
+
+Instead of 5-6, in Nios II SBT Eclipse: right-click `traffic_b` -> *Run As* -> *Nios II Hardware*
+(downloads, starts and opens the console).
+
+**One command:** `VersionB\run_board.bat` does steps 2-6 with `quartus_pgm` (the tether runs in its
+own window: keep it open), `nios2-download -g` and `nios2-terminal`. It finds Quartus through
+`QUARTUS_ROOTDIR` (or `C:\intelFPGA_lite\18.1`) and needs `traffic_b.elf` (in the zip, or build it
+as below). An optional argument selects another cable name (`jtagconfig` lists them).
+
 ## Running Version B (DE2-115)
 
-**Program the FPGA**
-
-* Submission image: program the `.pof` into the EPCS64 configuration flash (Active Serial).
-  The `.pof` holds only the FPGA hardware: after power-up the FPGA loads from flash without
-  programming, but the Nios II program lives in SDRAM, so the lights only cycle after
-  `nios2-download -g traffic_b.elf`.
-  Sequence: power-cycle -> FPGA loads from flash without programming -> `nios2-download` the
-  `.elf` -> lights cycle.
-* Development image: `output_files/COMPSYS303_Lab1_time_limited.sof` (Quartus Lite, OpenCore Plus).
-  It only runs **while tethered**: keep `nios2-configure-sof` (or the Quartus Programmer OpenCore Plus
-  window) open the whole time.
+**Program the FPGA:** see *Programming files* above (or run `VersionB\run_board.bat`, which also
+downloads the program and opens the console).
 
 **Build** (Nios II Command Shell, no edits needed - verified from a fresh clone)
 
@@ -70,7 +104,7 @@ or in Nios II SBT Eclipse: *File > Import > Existing Projects into Workspace*, r
 **Download and run**
 
 ```
-nios2-configure-sof output_files/COMPSYS303_Lab1_time_limited.sof    (time-limited image only; leave it open)
+nios2-configure-sof output_files/COMPSYS303_Lab1_time_limited.sof    (the tether: leave it open)
 nios2-download -g software/traffic_b/traffic_b.elf
 nios2-terminal
 ```
@@ -106,10 +140,10 @@ Default timing: G 6 s, Y 2 s, all-red 0.5 s, walk 4 s, camera dwell 1 s; one tim
 
 ## Known limitations
 
-* The `.pof` contains only the FPGA hardware. The Nios II reset vector is in SDRAM
-  (`0x00800000`) and the program (about 98 KB) does not fit the 30 KB on-chip RAM, so after
-  power-up the `.elf` must be downloaded over JTAG. Future work: boot the software from flash
-  (an EPCS flash controller plus a boot copier in the Qsys system).
+* No `.pof` (see *Programming files*): the FPGA is programmed over JTAG with the time-limited `.sof`,
+  and the program always has to be downloaded over JTAG because it runs from SDRAM. Future work: a
+  full-licence (or Nios II/e) build for a `.pof`, and booting the software from flash (an EPCS flash
+  controller plus a boot copier in the Qsys system).
 * The time-limited `.sof` needs the JTAG tether; if the tether is interrupted the Nios II stops (re-configure).
 * JTAG `printf`: with no console attached the HAL buffers about 2 KB of output; after that output is lost
   or `printf` can briefly delay the loop. The lights keep their timing in the tested 50 s without a console.
