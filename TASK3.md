@@ -118,6 +118,14 @@ timer Version B are not implemented here.
 
 ## Validation performed
 
+> **Note (2026-10-19):** this section records the first Task 3 test run, made
+> before the update at the top of this file (packets then in seconds, 0
+> accepted). Its `tests/` scripts are not part of the repository or the
+> submission. The current checks are `VersionB/evidence/versionA/run_versionA_sim.py`
+> (Version A in KIELER's simulator, including strict Dynamic mode),
+> `VersionB/nios/pc_suite.c` and the board logs, all listed in
+> `VersionB/evidence/final_test_results.md`.
+
 The chart was parsed, validated and compiled using the actual KIELER language
 server bundled with the installed `kieler.keith-vscode-0.3.0` extension, through
 the `de.cau.cs.kieler.sccharts.netlist.java` compilation chain. The resulting

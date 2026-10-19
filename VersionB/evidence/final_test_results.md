@@ -126,8 +126,8 @@ marked by `#` lines; T0: 237 phases, 0 violations).
 | D7 | PASS | AI Use Declaration in both charts, both `main.c` (identical), `pc_test.c`, `pc_suite.c`, `pc_suite_print.h`, `analyse_logs.py`, `check_board_log.py`, `diff_A_B.py`, `run_versionA_sim.py`, `run_kieler_warning.py`, `make_submission.ps1`, `run_board.bat`, `board_test.v`, `COMPSYS303_Lab1_diag.v`. The KIELER-generated `.c/.h` carry none (regenerated files). |
 | D8 | PASS | `VersionB/make_submission.ps1 -Group 14 -Sof -IncludeElf` on main (2026-10-19): **250 files**, 7.0 MB uncompressed, no ERROR/WARNING. Contents: the 2 combined charts (`TrafficLight_VersionA.sctx`, `VersionB/TrafficLight_VersionB.sctx`); README.md, TASK3.md, TASK4.md; traffic_b (with the board-tested `traffic_b.elf`) + traffic_b_bsp without obj/; `nios2_system.sopcinfo` (generation ID 1786080893); the board-tested `.sof` (SHA-256 D11CD8F5..., no `.pof`, see D1-D3); `run_board.bat`; evidence/ incl. figures/, versionA/, kieler_warning/; nios/ PC test sources. No stand-alone Task 1/2 files (moved to `_to_delete/`). The packed `.elf` is the one every board test of today used; a fresh build of the current sources (comment-only `main.c` change since) gives byte-identical .entry/.exceptions/.text/.rodata/.rwdata. Longest path in the zip: 93 characters. |
 | D9 | PASS | Dry-run list contains no `db/`, `incremental_db/`, `.metadata/`, `obj/`, `Hello_lab1*`, `_to_delete/`, board_test outputs or `TASK3_EDGE_RESULTS.md`. |
-| D10 | PENDING | Report (group). `report_facts.md` has every number with its source. |
-| D11 | PENDING | Group. |
+| D10 | DONE | Report `COMPSYS303_Group14_Report.pdf` (6 pages, 12 pt, Table III agreed by Harold and Lucas), handed in separately on Canvas as the brief requires; every number is in `report_facts.md` with its source. |
+| D11 | PENDING | Demonstration and interview in Week 12 (both members). |
 | D12 | PASS | Pushed to `origin` (github.com/Wing-Hin/compsys303); see the last push in the git log. |
 
 ## Known limitations found while testing
