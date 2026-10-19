@@ -23,9 +23,9 @@ Normalisation (each rule is a documented A/B timing difference):
 
 Usage:  python diff_A_B.py        (exit code 0 = only expected differences)
 
-AI Use Declaration: The design and all design decisions were made by Harold and Lucas.
-This check script was written with the assistance of a generative AI tool (Claude,
-Anthropic), then reviewed, tested and verified by Harold and Lucas.
+AI Use Declaration: Harold and Lucas designed the system and made all design decisions. They
+discussed the structure of the code with Claude (Anthropic), which helped write parts of
+this file; Harold and Lucas reviewed, tested and verified all of it.
 """
 
 import difflib
@@ -36,7 +36,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 # The submitted Version A chart and its Version B twin (Tasks 1-4 combined).
 PAIRS = [
-    (ROOT / "TrafficLight_VersionA.sctx", ROOT / "VersionB" / "TrafficLight_VersionB.sctx"),
+    (ROOT / "VersionA" / "TrafficLight_VersionA.sctx", ROOT / "VersionB" / "TrafficLight_VersionB.sctx"),
 ]
 
 CONST_RE = re.compile(r"^const (float|int) (\w+) = ([\d.]+)$")

@@ -4,9 +4,9 @@
  * counted by pc_suite.c instead of written to the console. The generated
  * file itself is not modified.
  *
- * AI Use Declaration: The design and all design decisions were made by Harold and Lucas.
- * This test header was written with the assistance of a generative AI tool (Claude,
- * Anthropic), then reviewed, tested and verified by Harold and Lucas.
+ * AI Use Declaration: Harold and Lucas designed the system and made all design decisions.
+ * They discussed the structure of the code with Claude (Anthropic), which helped write
+ * parts of this file; Harold and Lucas reviewed, tested and verified all of it.
  */
 #include <stdio.h>
 int suite_printf(const char *fmt, ...);

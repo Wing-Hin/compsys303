@@ -6,8 +6,9 @@
  * the free-running loop on the Nios II. Prints every change of LEDR with the
  * number of timer events the previous phase lasted.
  *
- * Build next to the generated files (gcc from MinGW or the Quartus/Nios shell):
- *     gcc pc_test.c sccharts.c -o pc_test
+ * Build (from VersionB/nios, gcc from MinGW or the Quartus/Nios shell):
+ *     gcc -I../COMPSYS303_Lab1/software/traffic_b pc_test.c ^
+ *         ../COMPSYS303_Lab1/software/traffic_b/TrafficLight_B.c -o pc_test
  *     ./pc_test
  *
  * Expected with TIMER_MS = 10 and the default time-outs:
@@ -20,7 +21,7 @@
  */
 #include <stdio.h>
 #include <string.h>
-#include "sccharts.h"
+#include "TrafficLight_B.h"
 
 #define TIMER_MS     10      /* must match the chart */
 #define EVENT_EVERY  7       /* one timer event every 7 ticks: 6 idle ticks between */

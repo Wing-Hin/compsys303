@@ -1,5 +1,7 @@
 # COMPSYS303 final test plan (Part 2: Version A + Version B, Tasks 1–4)
 
+> **Status (19 Oct 2026):** executed; every result is in `evidence/final_test_results.md` under these IDs. Tests that refer to the stand-alone Task 1/2 charts or to a `.pof` (D1-D3) were superseded: Tasks 1-4 are submitted as the two combined charts, and the board-tested time-limited `.sof` replaces the `.pof` (see the results file).
+
 Purpose: before submitting, prove that every requirement in the brief works, on the simulator (Version A) and on the DE2-115 (Version B), and that the zip is complete and builds from scratch.
 
 **Priority:** **M** = must pass before submitting · **S** = should (strengthens the report or demo) · **N** = nice to have.

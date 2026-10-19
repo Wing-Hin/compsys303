@@ -16,12 +16,10 @@ and clocks (Version A); a real missing delayed transition is an ERROR (W4).
 
 Usage:  python run_kieler_warning.py      (writes results.txt next to this script)
 
-AI Use Declaration: All design decisions were made by Harold and Lucas. Harold and
-Lucas discussed the structure with generative AI tools and implemented the project by
-hand, with parts written with the assistance of Claude (Anthropic) and ChatGPT
-(OpenAI). This check script and the four W*.sctx test charts were written with the
-assistance of Claude (Anthropic), then reviewed, tested and verified by Harold and
-Lucas.
+AI Use Declaration: Harold and Lucas designed the system and made all design decisions. They
+discussed the structure of the code with Claude (Anthropic), which helped write parts of
+this script and the four W*.sctx test charts; Harold and Lucas reviewed, tested and verified
+all of it.
 """
 
 import glob
@@ -34,9 +32,9 @@ import time
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-ROOT = HERE.parents[2]
+ROOT = HERE.parents[1]
 CHARTS = sorted(HERE.glob("W*.sctx")) + [
-    ROOT / "TrafficLight_VersionA.sctx", ROOT / "VersionB" / "TrafficLight_VersionB.sctx"]
+    ROOT / "VersionA" / "TrafficLight_VersionA.sctx", ROOT / "VersionB" / "TrafficLight_VersionB.sctx"]
 ANSI = re.compile(r"\x1b\[[0-9;]*m")
 
 

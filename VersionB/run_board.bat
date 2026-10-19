@@ -17,9 +17,9 @@ rem   Needs Quartus Prime 18.1 (Lite is enough) with the Nios II EDS, the board
 rem   powered, the USB-Blaster cable in the BLASTER port and RUN/PROG on RUN.
 rem   Paths are relative to this file, as in the repository and in group_N.zip.
 rem
-rem AI Use Declaration: The design and all design decisions were made by Harold and Lucas.
-rem This script was written with the assistance of a generative AI tool (Claude,
-rem Anthropic), then reviewed, tested and verified by Harold and Lucas.
+rem AI Use Declaration: Harold and Lucas designed the system and made all design decisions.
+rem They discussed the structure of the code with Claude (Anthropic), which helped write
+rem parts of this file; Harold and Lucas reviewed, tested and verified all of it.
 rem ==========================================================================
 setlocal EnableExtensions
 if "%~1"==":tether" goto :tether

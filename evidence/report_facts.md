@@ -1,15 +1,16 @@
 # Report facts (Version B) - numbers and their sources
 
 All times measured on the DE2-115 with timer_1 (50 MHz timestamp) unless noted. Paths relative to
-`VersionB/evidence/`. Regenerate the derived files with `analyse_logs.py` and `export_figure_data.py`.
+`evidence/`; board logs `B_*.txt` and `B_summary.md` are in `board_logs/`, the PC suite in `pc_suite/`.
+Regenerate the derived files with `scripts/analyse_logs.py` and `scripts/export_figure_data.py`.
 
 ## Platform and build
 
 | Fact | Value | Source |
 |---|---|---|
-| FPGA / CPU | Cyclone IV E EP4CE115F29C7, Nios II/f at 50 MHz, program in SDRAM | `../COMPSYS303_Lab1/nios2_system.sopcinfo`, `../COMPSYS303_Lab1/software/traffic_b_bsp/system.h` |
-| Timer event source | timer_0 (HAL system clock, 1 ms tick), `alt_alarm` every `TIMER_PERIOD_MS` | `../COMPSYS303_Lab1/software/traffic_b/main.c` |
-| Program storage | Reset vector in SDRAM (0x00800000); program about 98 KB; on-chip RAM 30 KB (30720 B); no EPCS flash controller in the Qsys system. So the `.pof` holds only the FPGA hardware and the `.elf` is downloaded over JTAG after power-up | `../COMPSYS303_Lab1/software/traffic_b_bsp/system.h` (ALT_CPU_RESET_ADDR, ONCHIP_MEM_SPAN), `nios2-download` output |
+| FPGA / CPU | Cyclone IV E EP4CE115F29C7, Nios II/f at 50 MHz, program in SDRAM | `../VersionB/COMPSYS303_Lab1/nios2_system.sopcinfo`, `../VersionB/COMPSYS303_Lab1/software/traffic_b_bsp/system.h` |
+| Timer event source | timer_0 (HAL system clock, 1 ms tick), `alt_alarm` every `TIMER_PERIOD_MS` | `../VersionB/COMPSYS303_Lab1/software/traffic_b/main.c` |
+| Program storage | Reset vector in SDRAM (0x00800000); program about 98 KB; on-chip RAM 30 KB (30720 B); no EPCS flash controller in the Qsys system. So the `.pof` holds only the FPGA hardware and the `.elf` is downloaded over JTAG after power-up | `../VersionB/COMPSYS303_Lab1/software/traffic_b_bsp/system.h` (ALT_CPU_RESET_ADDR, ONCHIP_MEM_SPAN), `nios2-download` output |
 | Stopwatch | timer_1 timestamp, 32-bit at 50 MHz, wraps every 85.9 s (CONT bit set in `main.c`) | `main.c`, `B_C3_task3_exit.txt` line 12 |
 | ELF size | text 91988 B, data 7388 B, bss 388 B (about 98 KB), current build (Task 3 in ms, JTAG-console packet input); 0 build warnings | `nios2-elf-size traffic_b.elf` |
 | Build warnings | 0 (BSP and app, also from a fresh clone) | `final_test_results.md` D4 |
@@ -70,7 +71,7 @@ All times measured on the DE2-115 with timer_1 (50 MHz timestamp) unless noted. 
 
 | Item | Reason | Source |
 |---|---|---|
-| Boot the software from flash (EPCS controller + boot copier) | the board currently needs `nios2-download` after power-up | `../COMPSYS303_Lab1/nios2_system.qsys` (no EPCS controller), `system.h` |
+| Boot the software from flash (EPCS controller + boot copier) | the board currently needs `nios2-download` after power-up | `../VersionB/COMPSYS303_Lab1/nios2_system.qsys` (no EPCS controller), `system.h` |
 
 ## Verification
 
@@ -90,7 +91,7 @@ All times measured on the DE2-115 with timer_1 (50 MHz timestamp) unless noted. 
 |---|---|---|
 | Simulator | KIELER's own *Netlist-based Simulation (C)* (`de.cau.cs.kieler.sccharts.simulation.netlist.c`), built from the committed chart | `versionA/run_versionA_sim.py` |
 | A-tests | 13 / 13 pass (A2-A11, A13-A15) | `versionA/A_results.txt` |
-| Reactions per Task 1 cycle | Version A (strict Dynamic): 6.1 per 17 s cycle (61 for 10 cycles); Version B at 10 ms: 2,050-2,200 per second, about 35,000-37,000 per cycle, 95 % of them without a timer event | `versionA/A_results.txt` A14, `B_summary.md` |
+| Reactions per Task 1 cycle | Version A (strict Dynamic): 6.1 per 17 s cycle (61 for 10 cycles); Version B at 10 ms: about 2,180 per second, 37,067-37,072 per Task 1 cycle (1,700 with a timer event), 95.4 % of them without a timer event | `versionA/A_results.txt` A14, `B_summary.md` |
 | Reactions with Task 4 | Version A: 19 reactions for about 2 cycles with a car and a snapshot (2 clocks, 4 button ticks) | `versionA/A_results.txt` A15 |
 | Camera bug found by A10/A11 | ArmedCheck's two transitions to one target compiled to one guard; fixed with a separate ArmedTick target | `final_test_results.md`, finding |
 | Version A phase error, real-time Dynamic stepping on the PC | +0.15 .. +0.64 ms over 12 phases (always late: the host wakes after the deadline) | `versionA/A2_realtime_phases.csv`, `figures/e_versionA_vs_versionB.png` |

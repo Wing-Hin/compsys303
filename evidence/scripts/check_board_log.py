@@ -2,7 +2,7 @@
 """
 COMPSYS 303 Version B - board log checker (test T0, standard library only).
 
-Checks every evidence/B_*.txt console log (or the files given as arguments)
+Checks every evidence/board_logs/B_*.txt console log (or the files given as arguments)
 against the shared pass criteria of the test plan (Part II, section 0):
 
   1. LEDR is always one of 33, 34, 36, 12, 20, 97, 140.
@@ -32,9 +32,9 @@ startup line "LEDR -1 -> 33" and any line cut off when the log was stopped.
 
 Usage:  python check_board_log.py [log files...]     (exit code 1 on any violation)
 
-AI Use Declaration: The design and all design decisions were made by Harold and Lucas.
-This check script was written with the assistance of a generative AI tool (Claude,
-Anthropic), then reviewed, tested and verified by Harold and Lucas.
+AI Use Declaration: Harold and Lucas designed the system and made all design decisions. They
+discussed the structure of the code with Claude (Anthropic), which helped write parts of
+this file; Harold and Lucas reviewed, tested and verified all of it.
 """
 
 import math
@@ -43,7 +43,9 @@ import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-CHART = HERE.parent / "TrafficLight_VersionB.sctx"
+ROOT = HERE.parents[1]
+LOGS = ROOT / "evidence" / "board_logs"
+CHART = ROOT / "VersionB" / "TrafficLight_VersionB.sctx"
 
 PHASE_RE = re.compile(
     r"^LEDR\s+(-?\d+)\s+->\s+(-?\d+)\s*\|\s*previous phase\s+(\d+)\s+us\s*\|"
@@ -207,7 +209,7 @@ def check(path, defaults):
 
 
 def main(argv):
-    files = [Path(p) for p in argv] or sorted(p for p in HERE.glob("B_*.txt") if is_raw_log(p))
+    files = [Path(p) for p in argv] or sorted(p for p in LOGS.glob("B_*.txt") if is_raw_log(p))
     defaults = chart_timeouts()
     total_v = 0
     for f in files:

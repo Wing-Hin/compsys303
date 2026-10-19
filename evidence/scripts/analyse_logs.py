@@ -2,10 +2,10 @@
 """
 COMPSYS 303 Version B - board log analysis (standard library only).
 
-Parses every evidence/B_*.txt console log written by nios2-terminal:
+Parses every evidence/board_logs/B_*.txt console log written by nios2-terminal:
     LEDR a -> b | previous phase N us | T ticks | E timer events
     camera dwell measured: N us
-and writes evidence/B_summary.md with, per experiment and per phase:
+and writes evidence/board_logs/B_summary.md with, per experiment and per phase:
 intended ms, count, mean / min / max measured ms, mean error, jitter
 (max - min), mean ticks, mean events, ticks per event and the share of
 ticks that carried no timer event.
@@ -18,9 +18,9 @@ number of timer events, times the real timer period:
     intended = events * TIMER_PERIOD_MS    (main.c side, the real alarm rate)
 which covers quantisation (E3) and the main.c-only rescale (E4).
 
-AI Use Declaration: The design and all design decisions were made by Harold and Lucas.
-This analysis script was written with the assistance of a generative AI tool (Claude,
-Anthropic), then reviewed, tested and verified by Harold and Lucas.
+AI Use Declaration: Harold and Lucas designed the system and made all design decisions. They
+discussed the structure of the code with Claude (Anthropic), which helped write parts of
+this file; Harold and Lucas reviewed, tested and verified all of it.
 """
 
 import math
@@ -29,8 +29,10 @@ import statistics
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-CHART = HERE.parent / "TrafficLight_VersionB.sctx"
-OUT = HERE / "B_summary.md"
+ROOT = HERE.parents[1]
+LOGS = ROOT / "evidence" / "board_logs"
+CHART = ROOT / "VersionB" / "TrafficLight_VersionB.sctx"
+OUT = LOGS / "B_summary.md"
 
 PHASE_RE = re.compile(
     r"^LEDR\s+(-?\d+)\s+->\s+(-?\d+)\s*\|\s*previous phase\s+(\d+)\s+us\s*\|"
@@ -150,7 +152,7 @@ def summarise(consts):
            "Intended = ceil(T / TIMER_MS) * TIMER_PERIOD_MS. "
            "Error = mean measured - intended. Jitter = max - min. "
            "Idle share = ticks that carried no timer event / all ticks.", ""]
-    logs = sorted((p for p in HERE.glob("B_*.txt") if is_raw_log(p)),
+    logs = sorted((p for p in LOGS.glob("B_*.txt") if is_raw_log(p)),
                   key=lambda p: list(EXPERIMENTS).index(p.stem) if p.stem in EXPERIMENTS else 99)
     for path in logs:
         timer_ms, period_ms, phases, dwells, restarts = parse_log(path)

@@ -1,20 +1,27 @@
 # Version B (Tasks 1–4): step-by-step guide
 
-Version B is the same controller as Version A with a different notion of time. The chart has no clocks. A Nios II interval timer raises an interrupt every `TIMER_MS` milliseconds, `main.c` turns each interrupt into one `timerTick` input, and each timed state counts those events. Everything else (states, LED words, regions, request handling, parser, camera logic) is copied from Version A unchanged. That is the point the brief makes in §2: "design the light-switching logic once; only the timing mechanism should differ".
+> **Status (19 Oct 2026, final submission):** this is the guide Version B was built with; it is kept
+> in the repository as a record and is not part of the submission zip. Final state: Tasks 1-4 are
+> submitted as **two combined charts**, `TrafficLight_VersionA.sctx` and
+> `VersionB/TrafficLight_VersionB.sctx` (the stand-alone Task 1/2 charts it mentions were retired to
+> `VersionB/_to_delete/`). Task 3 packets are **milliseconds, 1-9999**. The FPGA image is the
+> board-tested time-limited `.sof` with its `nios2_system.sopcinfo` (no `.pof`; see the top-level
+> `README.md`, *Programming files*). The submission is built with
+> `VersionB\make_submission.ps1 -Group 14 -Sof -IncludeElf`.
 
-> **Deadline check.** The course handout lists *Assignment 1 submission: 19 Oct 2026*. The brief says the exact dates are on Canvas. Check Canvas today. If the deadline really is tomorrow, follow the critical path: Steps 1, 3, 4, 6, 7, 8, 10, then as much of Step 9 as time allows. Step 2 and Step 5 are useful but optional.
+Version B is the same controller as Version A with a different notion of time. The chart has no clocks. A Nios II interval timer raises an interrupt every `TIMER_MS` milliseconds, `main.c` turns each interrupt into one `timerTick` input, and each timed state counts those events. Everything else (states, LED words, regions, request handling, parser, camera logic) is copied from Version A unchanged. That is the point the brief makes in §2: "design the light-switching logic once; only the timing mechanism should differ".
 
 ## Files in this folder
 
 | File | What it is | Status |
 |---|---|---|
-| `Task1_VersionB.sctx` | Task 1 converted to Version B. Use it as the pattern for every other conversion | given (review it) |
+| `Task1_VersionB.sctx` | Task 1 converted to Version B, the pattern for the conversion | retired (combined chart below) |
 | `nios/main.c` | Glue code: timer ISR → `timerTick`, keys/switches/UART → inputs, `LEDR` → red LEDs, evidence log | given (review it) |
 | `nios/pc_test.c` | Runs the generated chart on your PC with a fake timer, before you touch the board | given |
-| `Task2_VersionB.sctx` | Task 2 converted (Step 5) | you write |
-| `TrafficLight_VersionB.sctx` | Tasks 1–4 combined, the chart you demo (Step 6) | given (review it; the Step 6 list is the diff against Version A) |
+| `Task2_VersionB.sctx` | Task 2 converted (Step 5) | retired (combined chart below) |
+| `TrafficLight_VersionB.sctx` | Tasks 1–4 combined, the submitted chart you demo (Step 6) | done (Step 6 lists the diff against Version A) |
 
-The given files carry an AI-use declaration. Keep it, and add one to the charts you write if you use AI help (the handout says undeclared AI code counts as misconduct).
+Every submitted chart and source file carries an AI-use declaration (`final_test_results.md`, D7).
 
 ---
 
@@ -181,7 +188,7 @@ On the board, use `#define CHART 2`. Press KEY0 during R-G: the next G-R lights 
 Copy your current `TrafficLight_VersionA.sctx` and edit it. Line numbers refer to the Version A file as it is in your repo now.
 
 **Interface and constants**
-- L1–9: new header (Version B, timer events instead of deltaT, board mapping) plus an AI declaration that covers **all** the help you used. TASK3.md/TASK4.md say Tasks 3/4 were done with OpenAI Codex, and the current header only mentions Claude, so fix this in the Version A file too.
+- L1–9: new header (Version B, timer events instead of deltaT, board mapping) plus an AI declaration that covers all the help used (both combined charts now name Claude and OpenAI Codex).
 - L11: delete `@ClocksUseSD`. L12: `scchart TrafficLight_B`.
 - L15–21: `const int` in ms (6000, 2000, 500, 6000, 2000, 500, `WALK_TIME = 4000`), and add `const int TIMER_MS = 10`.
 - L23: `const int CAMERA_DWELL = 1000`.
@@ -261,9 +268,9 @@ For E5, compute the share of wasted work as 1 − events/ticks. At P = 10 a cycl
 
 ## 11. Step 10: submission checklist
 
-- **.pof:** Quartus → File → Convert Programming Files → type *Programmer Object File (.pof)*, configuration device **EPCS64**, mode *Active Serial*, SOF Data → Add File → your `.sof` → Generate.
-- **Zip `group_N.zip`:** all `.sctx` (A: Task1, Task2, TrafficLight; B: Task1, Task2, TrafficLight); the `traffic_b` and `traffic_b_bsp` folders (you may run Project → Clean first to drop build outputs); the `.pof` and `.sopcinfo`; a README with the D4 mapping table and "Version A = simulator charts, Version B = board charts" (the brief asks which input selects which task and which selects the timing version); the evidence (A `.ktrace` files and B console logs).
-- **AI declarations** in every chart and in `main.c`, naming every tool you used.
+- **Zip `group_14.zip`:** built by `powershell -ExecutionPolicy Bypass -File VersionB\make_submission.ps1 -Group 14 -Sof -IncludeElf`: the two combined charts; `README.md`, `TASK3.md`, `TASK4.md`; the `traffic_b` (with `traffic_b.elf`) and `traffic_b_bsp` projects without build outputs; `nios2_system.sopcinfo`; the board-tested `COMPSYS303_Lab1_time_limited.sof` (SHA-256 and generation ID are checked) and `run_board.bat`; the evidence (Version A simulation traces in `evidence/versionA/`, Version B board logs).
+- **No `.pof`:** Quartus Lite cannot make one from the time-limited Nios II/f image; the README explains this.
+- **AI declarations** in every chart and source file, naming every tool used.
 - **The report PDF** is submitted separately.
 
 ## 12. Troubleshooting

@@ -12,7 +12,7 @@ A9   PASS  '1,2,3' + LF in the Task 3 hold: configRejected 0 -> 1, lights still 
 A10  PASS  car present at yellow: 'Camera activated' at yellow start, 'Snapshot taken' 1.0 s later
 A11  PASS  car leaves 0.5 s after activation: 'Vehicle left' 1, snapshots 0
 A13  PASS  '6000,2000,0,...' and '...,2000,0' + LF in the hold: configRejected 1 -> 3, lights still 36, nothing applied (0 would skip a safety phase)
-A14  PASS  Task 1, 10 cycles (170 s) in strict Dynamic mode: 61 reactions for 60 LEDR changes = 6.1 per 17 s cycle, every phase exact (yes). Version B at 10 ms computes 2,050-2,200 reactions per second, about 35,000-37,000 per cycle (B_summary.md)
+A14  PASS  Task 1, 10 cycles (170 s) in strict Dynamic mode: 61 reactions for 60 LEDR changes = 6.1 per 17 s cycle, every phase exact (yes). Version B at 10 ms computes about 2,180 reactions per second, 37,067-37,072 per cycle (B_task1_10ms.txt, B_summary.md)
 A15  PASS  Task 4, about 2 cycles with a car and a snapshot in strict Dynamic mode: 19 reactions (4 of them the button pulses); snapshot 1.0 s after activation - two independent clocks, each tick only when one of them expires or an input arrives
 
 TOTAL: 13 passed, 0 failed, of 13

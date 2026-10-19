@@ -1,14 +1,14 @@
 % COMPSYS 303 Version B - report figures from phases.csv and dwell.csv
-% (written by ../export_figure_data.py from the raw board logs).
+% (written by ../scripts/export_figure_data.py from the raw board logs in ../board_logs).
 %
 % Run from this folder:   matlab -batch "make_figures"
 % Writes a_measured_vs_intended.png, b_phase_error.png, c_ticks_per_event.png,
 % d_camera_dwell.png and e_versionA_vs_versionB.png; (e) also reads
 % ../versionA/A2_realtime_phases.csv (written by ../versionA/run_versionA_sim.py).
 %
-% AI Use Declaration: The design and all design decisions were made by Harold and Lucas.
-% This plotting script was written with the assistance of a generative AI tool (Claude,
-% Anthropic), then reviewed, tested and verified by Harold and Lucas.
+% AI Use Declaration: Harold and Lucas designed the system and made all design decisions.
+% They discussed the structure of the code with Claude (Anthropic), which helped write parts
+% of this file; Harold and Lucas reviewed, tested and verified all of it.
 
 here = fileparts(mfilename('fullpath'));
 P = readtable(fullfile(here, 'phases.csv'), 'TextType', 'string');

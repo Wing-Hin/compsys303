@@ -14,10 +14,9 @@
  * The loop runs freely, so most ticks carry no timer event; that difference
  * (ticks computed vs events counted) is logged for the Section 4 comparison.
  *
- * AI Use Declaration: The design and all design decisions were made by Harold and Lucas.
- * This glue code (timer interrupt and event queue, input sampling, UART feed and
- * evidence logging) was written with the assistance of a generative AI tool (Claude,
- * Anthropic), then reviewed, tested and verified by Harold and Lucas on the DE2-115.
+ * AI Use Declaration: Harold and Lucas designed the system and made all design decisions.
+ * They discussed the structure of the code with Claude (Anthropic), which helped write
+ * parts of this file; Harold and Lucas reviewed, tested and verified all of it.
  */
 
 #include <stdio.h>

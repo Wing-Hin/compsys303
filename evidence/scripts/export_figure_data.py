@@ -10,9 +10,9 @@ figures/make_figures.m (MATLAB) turns them into the PNG figures.
 
 Usage:  python export_figure_data.py
 
-AI Use Declaration: The design and all design decisions were made by Harold and Lucas.
-This export script was written with the assistance of a generative AI tool (Claude,
-Anthropic), then reviewed, tested and verified by Harold and Lucas.
+AI Use Declaration: Harold and Lucas designed the system and made all design decisions. They
+discussed the structure of the code with Claude (Anthropic), which helped write parts of
+this file; Harold and Lucas reviewed, tested and verified all of it.
 """
 
 import csv
@@ -24,7 +24,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import analyse_logs as al  # noqa: E402  (same folder; works with python -I too)
 
-FIG = HERE / "figures"
+FIG = HERE.parent / "figures"
 
 EXPERIMENTS = [("E2a 1 ms", "B_E2_1ms"), ("E2b 10 ms", "B_task1_10ms"), ("E2c 100 ms", "B_E2_100ms"),
                ("E3 300 ms", "B_E3_300ms"), ("E4 rescale 10/20 ms", "B_E4_rescale")]
@@ -41,7 +41,7 @@ def main():
                     "mean_ms", "min_ms", "max_ms", "mean_error_ms", "mean_ticks", "mean_events",
                     "ticks_per_event", "idle_share"])
         for label, stem in EXPERIMENTS:
-            timer_ms, period_ms, phases, _, _ = al.parse_log(HERE / f"{stem}.txt")
+            timer_ms, period_ms, phases, _, _ = al.parse_log(al.LOGS / f"{stem}.txt")
             for ab in PHASE_ORDER:
                 g = [p for p in phases if p["ab"] == ab]
                 name, tname = al.PHASE_INFO[ab]
@@ -57,7 +57,7 @@ def main():
         w = csv.writer(f)
         w.writerow(["case", "dwell_ms"])
         for label, stem in DWELLS:
-            for d in al.parse_log(HERE / f"{stem}.txt")[3]:
+            for d in al.parse_log(al.LOGS / f"{stem}.txt")[3]:
                 w.writerow([label, f"{d / 1000.0:.3f}"])
     print("wrote", FIG / "phases.csv", "and", FIG / "dwell.csv")
 

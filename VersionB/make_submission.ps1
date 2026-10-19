@@ -10,8 +10,9 @@ COMPSYS 303 - build the submission zip group_<N>.zip from the repository.
            -Draft (no .pof yet: packs the time-limited .sof, writes group_<N>_draft.zip)
 
 Included (repository-relative paths are kept inside the zip):
-  * the SCCharts: TrafficLight_VersionA.sctx (root) and VersionB/TrafficLight_VersionB.sctx
-  * README.md, TASK3.md, TASK4.md
+  * README.md (start here)
+  * the SCCharts: VersionA/TrafficLight_VersionA.sctx and VersionB/TrafficLight_VersionB.sctx
+  * docs/TASK3.md, docs/TASK4.md
   * software/traffic_b and software/traffic_b_bsp sources, settings and Makefiles
     (no obj/, *.map, *.objdump, libhal_bsp.a; traffic_b.elf only with -IncludeElf)
   * nios2_system.sopcinfo - REQUIRED
@@ -19,15 +20,15 @@ Included (repository-relative paths are kept inside the zip):
     or with -Sof: VersionB/COMPSYS303_Lab1/output_files/COMPSYS303_Lab1_time_limited.sof - REQUIRED
     (must be the board-tested build: SHA-256 and Platform Designer generation ID are checked)
     and VersionB/run_board.bat
-  * VersionB/evidence/ (board logs, B_summary.md, final_test_results.md, figures/, scripts)
+  * evidence/ (README.md index, final_test_results.md, report_facts.md, board_logs/, versionA/,
+    figures/, pc_suite/, scripts/, kieler_warning/)
     including versionA/ (headless KIELER simulation of Version A: A_results.txt, traces)
-  * VersionB/nios/ PC test sources (main.c copy, pc_test.c, pc_suite.c, pc_suite_print.h)
 Excluded everywhere: db/, incremental_db/, .metadata/, obj/, Hello_lab1*, _to_delete/,
   board_test output, TASK3_EDGE_RESULTS.md, __pycache__/.
 
-AI Use Declaration: The design and all design decisions were made by Harold and Lucas.
-This packaging script was written with the assistance of a generative AI tool (Claude,
-Anthropic), then reviewed, tested and verified by Harold and Lucas.
+AI Use Declaration: Harold and Lucas designed the system and made all design decisions. They
+discussed the structure of the code with Claude (Anthropic), which helped write parts of
+this file; Harold and Lucas reviewed, tested and verified all of it.
 #>
 param(
     [Parameter(Mandatory = $true)][int]$Group,
@@ -42,7 +43,7 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 if ($Sof -and $Draft) { Write-Host "ERROR: -Sof and -Draft cannot be combined." -ForegroundColor Red; exit 1 }
 
-# The .sof every board test in VersionB/evidence used (Quartus checksum 0x008CFF92, assembled
+# The .sof every board test in evidence/board_logs used (Quartus checksum 0x008CFF92, assembled
 # Fri Aug 21 14:38:23 2026) and the Platform Designer generation it was compiled from
 # (nios2_system.sopcinfo AUTO_GENERATION_ID = GENERATION_ID in the compile's .sld/.jdi).
 $sofRel = "VersionB\COMPSYS303_Lab1\output_files\COMPSYS303_Lab1_time_limited.sof"
@@ -60,12 +61,12 @@ $files = New-Object System.Collections.Generic.List[string]
 function Add-Files($items) { foreach ($i in $items) { if ($i -and (Rel $i.FullName) -notmatch $exclude) { $files.Add($i.FullName) } } }
 
 # Charts
-Add-Files (Get-ChildItem -Path $root -Filter "TrafficLight_VersionA.sctx" -File)
-Add-Files (Get-ChildItem -Path (Join-Path $root "VersionB") -Filter "TrafficLight_VersionB.sctx" -File)
+Add-Files (Get-Item (Join-Path $root "VersionA\TrafficLight_VersionA.sctx"))
+Add-Files (Get-Item (Join-Path $root "VersionB\TrafficLight_VersionB.sctx"))
 # README and the Version A Task 3 / Task 4 notes it refers to
 Add-Files (Get-Item (Join-Path $root "README.md"))
-Add-Files (Get-Item (Join-Path $root "TASK3.md"))
-Add-Files (Get-Item (Join-Path $root "TASK4.md"))
+Add-Files (Get-Item (Join-Path $root "docs\TASK3.md"))
+Add-Files (Get-Item (Join-Path $root "docs\TASK4.md"))
 # Nios II application and BSP
 $sw = Join-Path $root "VersionB\COMPSYS303_Lab1\software"
 if ($IncludeElf -and -not (Test-Path (Join-Path $sw "traffic_b\traffic_b.elf"))) {
@@ -81,8 +82,7 @@ $sopcPath = Join-Path $root $sopcRel
 if (-not (Test-Path $sopcPath)) { Write-Host "ERROR: .sopcinfo NOT FOUND: $sopcPath" -ForegroundColor Red; exit 1 }
 Add-Files (Get-Item $sopcPath)
 # Evidence and PC test sources
-Add-Files (Get-ChildItem -Path (Join-Path $root "VersionB\evidence") -Recurse -File)
-Add-Files (Get-ChildItem -Path (Join-Path $root "VersionB\nios") -File | Where-Object { $_.Extension -in ".c", ".h" })
+Add-Files (Get-ChildItem -Path (Join-Path $root "evidence") -Recurse -File)
 
 # -Sof: the submission carries the board-tested time-limited .sof (Quartus Lite cannot make a
 # .pof of a Nios II/f design) and run_board.bat. It must be byte-identical to the tested image
@@ -128,9 +128,9 @@ foreach ($f in $list) {
 }
 "{0,10:N0}  bytes in total ({1:N1} MB, uncompressed)" -f $total, ($total / 1MB)
 
-if (-not (Test-Path (Join-Path $root "VersionB\evidence\figures"))) { Write-Warning "evidence\figures\ not found (Part 9 creates it)." }
-if (-not (Test-Path (Join-Path $root "VersionB\evidence\versionA\A_results.txt"))) {
-    Write-Warning "No Version A simulation evidence (run VersionB\evidence\versionA\run_versionA_sim.py)."
+if (-not (Test-Path (Join-Path $root "evidence\figures"))) { Write-Warning "evidence\figures\ not found." }
+if (-not (Test-Path (Join-Path $root "evidence\versionA\A_results.txt"))) {
+    Write-Warning "No Version A simulation evidence (run evidence\versionA\run_versionA_sim.py)."
 }
 if ($Sof) {
     ""

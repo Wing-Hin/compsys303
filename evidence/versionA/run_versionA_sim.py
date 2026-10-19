@@ -34,9 +34,9 @@ Usage:  python run_versionA_sim.py [--sim path\\to\\simulation.exe]
         (without --sim the simulator is built with KIELER; needs java and the
          kieler.keith-vscode extension)
 
-AI Use Declaration: The design and all design decisions were made by Harold and Lucas.
-This simulation driver was written with the assistance of a generative AI tool (Claude,
-Anthropic), then reviewed, tested and verified by Harold and Lucas.
+AI Use Declaration: Harold and Lucas designed the system and made all design decisions. They
+discussed the structure of the code with Claude (Anthropic), which helped write parts of
+this file; Harold and Lucas reviewed, tested and verified all of it.
 """
 
 import argparse
@@ -52,8 +52,8 @@ import time
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-ROOT = HERE.parents[2]
-CHART = ROOT / "TrafficLight_VersionA.sctx"
+ROOT = HERE.parents[1]
+CHART = ROOT / "VersionA" / "TrafficLight_VersionA.sctx"
 SYSTEM = "de.cau.cs.kieler.sccharts.simulation.netlist.c"
 EPS = 1e-6
 POLL = 0.1                 # step used when the chart requests no wake-up
@@ -365,8 +365,8 @@ def a14(exe):
     ok = exact and changes >= 59 and ticks <= 2 * changes + 2
     check("A14", ok, f"Task 1, 10 cycles (170 s) in strict Dynamic mode: {ticks} reactions for {changes} LEDR "
           f"changes = {ticks / 10:.1f} per 17 s cycle, every phase exact ({'yes' if exact else 'no'}). "
-          f"Version B at 10 ms computes 2,050-2,200 reactions per second, about 35,000-37,000 per cycle "
-          f"(B_summary.md)")
+          f"Version B at 10 ms computes about 2,180 reactions per second, 37,067-37,072 per cycle "
+          f"(B_task1_10ms.txt, B_summary.md)")
     s.save()
 
 

@@ -13,8 +13,8 @@ This folder is the Lab 1 Nios II system reused as the hardware for Version B of 
 | `keys` (KEY2..0) | KEY0 = NS pedestrian, KEY1 = EW pedestrian, KEY2 = vehicle enter/leave |
 | `switches` (SW17..0) | SW1..0 = task select (00 = Task 1, 01 = Task 2, 10 = Task 3, 11 = Task 4) |
 | `leds_red` (LEDR17..0) | LEDR5..0 = traffic lamps (Table 1), LEDR6 = NS walk, LEDR7 = EW walk |
-| `uart` (RS-232, 115200 8N1) | Task 3 configuration packets `#,#,#,#,#,#\n` (integer seconds) |
-| `jtag_uart` | stdout: Task 4 messages and the timing log |
+| `uart` (RS-232, 115200 8N1) | Task 3 configuration packets `#,#,#,#,#,#\n` (integer milliseconds, 1-9999) |
+| `jtag_uart` | stdout: Task 4 messages and the timing log; also accepts Task 3 packets typed into `nios2-terminal` |
 | `leds_green`, `lcd` | not used |
 
 KEY3 is the system reset (`reset_reset_n`).
@@ -27,11 +27,11 @@ Top level: `COMPSYS303_Lab1.bdf`, with pins from `DE2_115_pin_assignments.csv` i
 - The SDRAM clock output pin is renamed to `DRAM_CLK`, so the standard pin assignment binds. The workaround assignment to `sdram_pll_sdram_clk_clk` was removed from the `.qsf`.
 - The LCD backlight pin typo `LCD_BNON` is corrected to `LCD_BLON`. It was previously left unassigned.
 
-These three changes take effect at the next Quartus compile. The existing `output_files/COMPSYS303_Lab1_time_limited.sof` was built before them and is still valid for development.
+These three changes take effect at the next Quartus compile. The submitted `output_files/COMPSYS303_Lab1_time_limited.sof` was built before them; it is the image every board test used, and it is unaffected by them.
 
 ## Licence note
 
-The `.sof` is **time-limited** (OpenCore Plus) because Quartus Lite has no Nios II/f licence. It runs only while the board stays connected to the Programmer, with the OpenCore Plus window open, and no `.pof` can be produced from it. For the submission, recompile `COMPSYS303_Lab1.qpf` on a licensed lab PC to get `COMPSYS303_Lab1.sof`, then convert it with File → Convert Programming Files → `.pof`, EPCS64, Active Serial.
+The `.sof` is **time-limited** (OpenCore Plus evaluation) because Quartus Lite has no Nios II/f licence. It runs only while the OpenCore Plus session is active: the Programmer (or `quartus_pgm`) stays connected over JTAG with its OpenCore Plus window open (the tether). No `.pof` can be produced from it, so the submission contains this board-tested `.sof` and its matching `nios2_system.sopcinfo` instead of a `.pof` (see the top-level `README.md`, *Programming files*).
 
 ## Software
 
@@ -49,6 +49,8 @@ The `.sof` is **time-limited** (OpenCore Plus) because Quartus Lite has no Nios 
 First-time setup in Nios II SBT: File → Import → General → Existing Projects into Workspace → root `software\` → tick `traffic_b` and `traffic_b_bsp`, but do not copy them into the workspace. Then right-click `traffic_b_bsp` → Nios II → Generate BSP.
 
 ## Run
+
+One command: `VersionB\run_board.bat` programs the `.sof` (tether in its own window), downloads `traffic_b.elf` and opens `nios2-terminal`. By hand:
 
 1. Quartus Programmer → USB-Blaster → program the `.sof` (keep the OpenCore Plus window open).
 2. Nios II SBT → build `traffic_b_bsp`, then `traffic_b` → Run As → Nios II Hardware. Tick both *Ignore mismatched system ID / timestamp* boxes, because there is no sysid component.

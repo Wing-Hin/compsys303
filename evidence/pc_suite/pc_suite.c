@@ -12,19 +12,19 @@
  * change inside an all-red (on a tick that starts or ends with LEDR 36).
  * Each case then asserts its own outcome.
  *
- * Build and run (from VersionB/nios, gcc from MinGW):
- *   gcc -O2 -Wall -c -include pc_suite_print.h -I../COMPSYS303_Lab1/software/traffic_b ^
- *       ../COMPSYS303_Lab1/software/traffic_b/TrafficLight_B.c -o TrafficLight_B_suite.o
- *   gcc -O2 -Wall -I../COMPSYS303_Lab1/software/traffic_b pc_suite.c TrafficLight_B_suite.o -o pc_suite
+ * Build and run (from evidence/pc_suite, gcc from MinGW; also builds with -std=c99):
+ *   gcc -O2 -Wall -c -include pc_suite_print.h -I../../VersionB/COMPSYS303_Lab1/software/traffic_b ^
+ *       ../../VersionB/COMPSYS303_Lab1/software/traffic_b/TrafficLight_B.c -o TrafficLight_B_suite.o
+ *   gcc -O2 -Wall -I../../VersionB/COMPSYS303_Lab1/software/traffic_b pc_suite.c TrafficLight_B_suite.o -o pc_suite
  *   ./pc_suite          (exit code 0 = every case passed)
  *
  * Default time-outs at TIMER_MS = 10: G 600, Y 200, R-R 50, walk 400,
  * camera dwell 100 timer events. Task 3 packet values are milliseconds
  * (1..9999); a 0 field makes the packet invalid.
  *
- * AI Use Declaration: The design and all design decisions were made by Harold and Lucas.
- * This test suite was written with the assistance of a generative AI tool (Claude,
- * Anthropic), then reviewed, tested and verified by Harold and Lucas.
+ * AI Use Declaration: Harold and Lucas designed the system and made all design decisions.
+ * They discussed the structure of the code with Claude (Anthropic), which helped write
+ * parts of this file; Harold and Lucas reviewed, tested and verified all of it.
  */
 #include <stdio.h>
 #include <stdlib.h>

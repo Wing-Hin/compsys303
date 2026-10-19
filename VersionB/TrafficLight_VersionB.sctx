@@ -32,11 +32,10 @@
 //  KEY1 -> EWraised, KEY2 -> vehicleButton, RS-232 -> configChar,
 //  LEDR7..0 <- LEDR, print(...) -> JTAG UART console.
 //
-// AI Use Declaration: The design and all design decisions were made by Harold
-// and Lucas. The Version B conversion (timer-event counting) was written with the
-// assistance of Claude (Anthropic); the Task 3 and Task 4 logic carried over from
-// Version A was written with the assistance of OpenAI Codex. All of it was then
-// reviewed, tested and verified by Harold and Lucas in KIELER and on the DE2-115.
+// AI Use Declaration: Harold and Lucas designed the system and made all design decisions.
+// They discussed the structure of the code with Claude (Anthropic) and OpenAI Codex, which
+// helped write parts of this chart (Codex: the Task 3 parser and the Task 4 camera); Harold
+// and Lucas reviewed, tested and verified all of it.
 // =====================================================================
 scchart TrafficLight_B {
 

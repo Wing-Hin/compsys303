@@ -3,9 +3,9 @@
 //   LEDR[17:0] follows SW[17:0]      (switch up  -> red LED on)
 //   LEDG[3:0]  lights while KEY[3:0] is pressed (keys are active low)
 //   LEDG[8]    blinks at ~1.5 Hz from CLOCK_50 (proves the image is running)
-// AI Use Declaration: The design and all design decisions were made by Harold and Lucas.
-// This board test top level was written with the assistance of a generative AI tool
-// (Claude, Anthropic), then reviewed, tested and verified by Harold and Lucas.
+// AI Use Declaration: Harold and Lucas designed the system and made all design decisions.
+// They discussed the structure of the code with Claude (Anthropic), which helped write
+// parts of this file; Harold and Lucas reviewed, tested and verified all of it.
 module board_test (
     input         CLOCK_50,
     input  [17:0] SW,
