@@ -13,8 +13,8 @@ All times measured on the DE2-115 with timer_1 (50 MHz timestamp) unless noted. 
 | Stopwatch | timer_1 timestamp, 32-bit at 50 MHz, wraps every 85.9 s (CONT bit set in `main.c`) | `main.c`, `B_C3_task3_exit.txt` line 12 |
 | ELF size | text 91988 B, data 7388 B, bss 388 B (about 98 KB), current build (Task 3 in ms, JTAG-console packet input); 0 build warnings | `nios2-elf-size traffic_b.elf` |
 | Build warnings | 0 (BSP and app, also from a fresh clone) | `final_test_results.md` D4 |
-| KIELER compile, all 6 charts | 0 errors; "Instantaneous loop detected!" for every chart (plus clock `...SD` VariableStore notes in Version A). Caused by KIELER's expansion of during actions (B) and clocks (A): a delayed loop without them compiles silently, a real all-immediate loop is an error with no code | `kieler_warning/results.txt`, `final_test_results.md` A1, B3, B11 |
-| Version A vs B structure | all three pairs (Task 1, Task 2, Tasks 1-4): time constants equal (A s x 1000 = B ms), normalised charts identical; only difference the 6-line `ArmedCheck`/`ArmedTick` camera wake-up block in the combined A chart | `diff_A_B.py`, `final_test_results.md` B2 |
+| KIELER compile, both charts | 0 errors; "Instantaneous loop detected!" for every chart (plus clock `...SD` VariableStore notes in Version A). Caused by KIELER's expansion of during actions (B) and clocks (A): a delayed loop without them compiles silently, a real all-immediate loop is an error with no code | `kieler_warning/results.txt`, `final_test_results.md` A1, B3, B11 |
+| Version A vs B structure | the A/B pair (Tasks 1-4 combined): time constants equal (A s x 1000 = B ms), normalised charts identical; only difference the 6-line `ArmedCheck`/`ArmedTick` camera wake-up block in the combined A chart | `diff_A_B.py`, `final_test_results.md` B2 |
 
 ## Task 1 timing at the default 10 ms (E2b)
 
@@ -76,7 +76,7 @@ All times measured on the DE2-115 with timer_1 (50 MHz timestamp) unless noted. 
 
 | Fact | Value | Source |
 |---|---|---|
-| PC scripted suites | combined chart 30 / 30 (`pc_suite.c`); Task 2 chart 7 / 7 (`pc_task2.c`) | `pc_suite_results.txt`, `pc_task2_results.txt` |
+| PC scripted suites | combined chart 30 / 30 (`pc_suite.c`) | `pc_suite_results.txt` |
 | Random run (S28) | 1,000,000 ticks: 537 LEDR changes, 92 commits, 70 rejects, 14 snapshots, 0 rule violations | `pc_suite_results.txt` |
 | 0 time-outs | earlier parser accepted 0: 17 rule violations in a random run (yellow / all-red skipped, e.g. `33 -> 140`); now rejected: S30 random run with 0 fields, 216 rejects, 0 violations | `pc_suite_results.txt` S30, `final_test_results.md` finding |
 | Board-log checker (T0) | all 22 raw `B_*.txt` logs, 2172 phases: 0 violations | `check_board_log.py` output, `final_test_results.md` T0 |
@@ -89,7 +89,7 @@ All times measured on the DE2-115 with timer_1 (50 MHz timestamp) unless noted. 
 | Fact | Value | Source |
 |---|---|---|
 | Simulator | KIELER's own *Netlist-based Simulation (C)* (`de.cau.cs.kieler.sccharts.simulation.netlist.c`), built from the committed chart | `versionA/run_versionA_sim.py` |
-| A-tests | 15 / 15 pass (A2-A11, A13-A17), incl. the standalone Part 1 charts (A16, A17) | `versionA/A_results.txt` |
+| A-tests | 13 / 13 pass (A2-A11, A13-A15) | `versionA/A_results.txt` |
 | Reactions per Task 1 cycle | Version A (strict Dynamic): 6.1 per 17 s cycle (61 for 10 cycles); Version B at 10 ms: 2,050-2,200 per second, about 35,000-37,000 per cycle, 95 % of them without a timer event | `versionA/A_results.txt` A14, `B_summary.md` |
 | Reactions with Task 4 | Version A: 19 reactions for about 2 cycles with a car and a snapshot (2 clocks, 4 button ticks) | `versionA/A_results.txt` A15 |
 | Camera bug found by A10/A11 | ArmedCheck's two transitions to one target compiled to one guard; fixed with a separate ArmedTick target | `final_test_results.md`, finding |

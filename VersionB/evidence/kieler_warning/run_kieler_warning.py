@@ -4,7 +4,7 @@ COMPSYS 303 - where KIELER's "Instantaneous loop detected!" warning comes from.
 
 Every controller chart compiles with that warning, although each of its loops
 has a delayed transition (brief Section 1.3). This script compiles four tiny
-charts and the five controller charts with KIELER's netlist C compiler
+charts and the two controller charts with KIELER's netlist C compiler
 (de.cau.cs.kieler.sccharts.netlist, warnings on) and records the messages and
 whether C code was generated:
   W1 delayed loop, no during, no clock    -> expected: no message
@@ -36,9 +36,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
 CHARTS = sorted(HERE.glob("W*.sctx")) + [
-    ROOT / "Task1_VersionA.sctx", ROOT / "Task2_VersionA.sctx", ROOT / "TrafficLight_VersionA.sctx",
-    ROOT / "VersionB" / "Task1_VersionB.sctx", ROOT / "VersionB" / "Task2_VersionB.sctx",
-    ROOT / "VersionB" / "TrafficLight_VersionB.sctx"]
+    ROOT / "TrafficLight_VersionA.sctx", ROOT / "VersionB" / "TrafficLight_VersionB.sctx"]
 ANSI = re.compile(r"\x1b\[[0-9;]*m")
 
 

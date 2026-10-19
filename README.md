@@ -5,9 +5,9 @@
 
 Group 14 members: **Harold Tien** (`thar970`) and **Lucas Young** (`wyou790`).
 
-**Selecting the timing version:** there is no switch for it. The brief allows separate charts, and
-each task exists as a Version A chart (clocks, run in the KIELER simulator) and a Version B chart
-(counts the Nios II timer event, runs on the board). Same states, regions and LED words in both;
+**Selecting the timing version:** there is no switch for it. The brief allows separate charts: Tasks 1-4
+live in one combined chart, written once as Version A (clocks, run in the KIELER simulator) and once
+as Version B (counts the Nios II timer event, runs on the board). Same states, regions and LED words in both;
 `VersionB/evidence/diff_A_B.py` checks that only the timing differs. **Selecting the task:** the
 `task` input in the simulator, SW1..SW0 on the board (table below).
 
@@ -15,16 +15,14 @@ each task exists as a Version A chart (clocks, run in the KIELER simulator) and 
 
 | Path | Contents |
 |---|---|
-| `Task1_VersionA.sctx`, `Task2_VersionA.sctx` | Version A, Task 1 and Task 2 on their own |
 | `TrafficLight_VersionA.sctx` | Version A, Tasks 1-4 combined (`task` input selects the mode) |
 | `TASK3.md`, `TASK4.md` | Version A Task 3 protocol and Task 4 camera notes |
-| `VersionB/Task1_VersionB.sctx`, `VersionB/Task2_VersionB.sctx` | Version B, Task 1 and Task 2 on their own (`main.c` `CHART 1` / `CHART 2`) |
 | `VersionB/TrafficLight_VersionB.sctx` | Version B, Tasks 1-4 combined (counts `timerTick` events) |
 | `VersionB/VersionB_Guide.md` | How Version B maps the timing onto timer events |
 | `VersionB/COMPSYS303_Lab1/` | Quartus project (Lab 1 Nios II system), `nios2_system.qsys/.sopcinfo`, `README_VersionB.md` |
 | `VersionB/COMPSYS303_Lab1/software/traffic_b/` | Nios II application: `main.c` + KIELER-generated `TrafficLight_B.c/.h` |
 | `VersionB/COMPSYS303_Lab1/software/traffic_b_bsp/` | Nios II BSP (`settings.bsp`) |
-| `VersionB/nios/` | PC tools: `pc_test.c` (Task 1 rehearsal), `pc_suite.c` (30 scripted cases, combined chart), `pc_task2.c` (7 cases, Task 2 chart) |
+| `VersionB/nios/` | PC tools: `pc_test.c` (Task 1 rehearsal), `pc_suite.c` (30 scripted cases, combined chart) |
 | `VersionB/evidence/` | Board logs `B_*.txt`, `B_summary.md`, `final_test_results.md`, `report_facts.md`, analysis scripts, `figures/` |
 | `VersionB/evidence/versionA/` | Version A evidence: headless KIELER simulation (`run_versionA_sim.py`), results and traces |
 | `VersionB/evidence/kieler_warning/` | Why KIELER prints "Instantaneous loop detected!" for every chart (and why it is harmless) |
@@ -124,8 +122,8 @@ Default timing: G 6 s, Y 2 s, all-red 0.5 s, walk 4 s, camera dwell 1 s; one tim
 ## Tests and evidence
 
 `VersionB/evidence/final_test_results.md` lists every test ID with its status and evidence:
-static checks (`diff_A_B.py`, all three A/B chart pairs), the board-log checker (`check_board_log.py`),
-the PC suites (`VersionB/nios/pc_suite.c` 30/30, `pc_task2.c` 7/7), the Version A simulation
+static checks (`diff_A_B.py`, the A/B chart pair), the board-log checker (`check_board_log.py`),
+the PC suite (`VersionB/nios/pc_suite.c` 30/30), the Version A simulation
 (`versionA/A_results.txt`) and the DE2-115 logs. `B_summary.md` is produced by `analyse_logs.py`;
 `report_facts.md` collects the numbers for the report with their sources.
 

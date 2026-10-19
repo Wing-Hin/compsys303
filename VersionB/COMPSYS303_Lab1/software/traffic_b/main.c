@@ -34,8 +34,8 @@
 /* ---------------------------------------------------------------------------
  * Which chart is linked in. Copy the matching generated pair from kieler-gen\
  * (named after the scchart) into this project, and only that pair:
- *   1 = Task1_VersionB.sctx         -> Task1_TrafficLight_B.c / .h
- *   2 = Task2_VersionB.sctx         -> Task2_PedestrianTrafficLight_B.c / .h
+ *   (1 and 2 were the stand-alone Task 1 / Task 2 charts, no longer part of
+ *    the submission; only 4 is supported now)
  *   4 = TrafficLight_VersionB.sctx  -> TrafficLight_B.c / .h   (Tasks 1-4)
  * ------------------------------------------------------------------------- */
 #define CHART 4

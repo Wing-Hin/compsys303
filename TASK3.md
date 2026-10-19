@@ -12,7 +12,7 @@ timer Version B are not implemented here.
 > commit goes to `RRnExit`, whose clock guard requests the wake-up `t3`/`t6`
 > later, so the new all-red ends on time in pure Dynamic mode. The walkthrough
 > below uses the new format; the current regression is
-> `VersionB/evidence/versionA/run_versionA_sim.py` (A2-A17).
+> `VersionB/evidence/versionA/run_versionA_sim.py` (A2-A11, A13-A15).
 
 ## What changed and why
 

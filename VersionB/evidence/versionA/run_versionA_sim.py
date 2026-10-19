@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-COMPSYS 303 Version A - headless KIELER simulation regression (tests A2-A11, A13-A17).
+COMPSYS 303 Version A - headless KIELER simulation regression (tests A2-A11, A13-A15).
 
 What it runs: the simulator that KIELER itself generates for "Netlist-based
 Simulation (C)" (compilation system de.cau.cs.kieler.sccharts.simulation.netlist.c),
@@ -21,7 +21,6 @@ in the Task 3 hold) the driver keeps ticking every 0.1 s - except in STRICT
 Dynamic mode (A8, A14, A15), where nothing ticks without a wake-up or an input,
 exactly as in KIELER's dynamic ticking. A missing wake-up then shows as a failure.
 A14/A15 count those ticks (the computational-effort comparison, brief Section 4).
-A16/A17 run the standalone Part 1 charts Task1_VersionA / Task2_VersionA.
 Task 3 packet values are milliseconds (1..9999); a 0 field is invalid (A13).
 Buttons are one-tick pulses with deltaT = 0 (as in TASK3.md / TASK4.md);
 Task 3 characters are sent one per tick, only while configReady is true.
@@ -55,8 +54,6 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
 CHART = ROOT / "TrafficLight_VersionA.sctx"
-TASK1_CHART = ROOT / "Task1_VersionA.sctx"
-TASK2_CHART = ROOT / "Task2_VersionA.sctx"
 SYSTEM = "de.cau.cs.kieler.sccharts.simulation.netlist.c"
 EPS = 1e-6
 POLL = 0.1                 # step used when the chart requests no wake-up
@@ -394,37 +391,6 @@ def a15(exe):
     s.save()
 
 
-def a16(exe1):
-    s = Sim(exe1, "A16_task1_chart", inputs={})
-    s.tick(0)
-    ticks, changes = count_ticks(s, 2 * 17.0 + 0.2, "task 1 chart")
-    seq = [(a, b) for a, b, _ in s.phases_after(0)][:12]
-    want = [(33, 34), (34, 36), (36, 12), (12, 20), (20, 36), (36, 33)] * 2
-    nominal = {(33, 34): 6.0, (34, 36): 2.0, (36, 12): 0.5, (12, 20): 6.0, (20, 36): 2.0, (36, 33): 0.5}
-    exact = all(abs(d - nominal[(a, b)]) < EPS for a, b, d in s.phases_after(0))
-    check("A16", seq == want and exact, f"Task1_VersionA.sctx (Part 1), strict Dynamic mode: sequence "
-          f"{'33,34,36,12,20,36 x2' if seq == want else seq}, durations exact ({'yes' if exact else 'no'}), "
-          f"{ticks} reactions for {changes} changes")
-    s.save()
-
-
-def a17(exe2):
-    s = Sim(exe2, "A17_task2_chart", inputs={"NSraised": False, "EWraised": False})
-    s.tick(0)
-    s.run_until_ledr(R_G)
-    s.run_for(1.0)
-    s.pulse("NSraised")
-    t97 = s.run_until_ledr(NS_WALK)
-    s.run_until_ledr(R_G)
-    s.run_for(1.0)
-    walk = [d for a, b, d in s.phases_after(t97 or 0) if a == NS_WALK]
-    rest = [d for a, b, d in s.phases_after(t97 or 0) if (a, b) == (G_R, Y_R)]
-    ok = t97 is not None and walk and abs(walk[0] - 4.0) < EPS and rest and abs(rest[0] - 2.0) < EPS
-    check("A17", ok, f"Task2_VersionA.sctx (Part 1): NS press in R-G -> next G-R shows 97 for "
-          f"{walk[0] if walk else '-'} s, then 33 for the remaining {rest[0] if rest else '-'} s")
-    s.save()
-
-
 def a10(exe):
     s = Sim(exe, "A10_camera_snapshot")
     s.tick(0, task=4)
@@ -474,12 +440,8 @@ def main():
         exe, warnings = args.sim, ["(prebuilt simulator)"]
     else:
         exe, warnings = build_simulator(Path(tmp) / "combined", args.chart)
-    exe1, _ = build_simulator(Path(tmp) / "task1", TASK1_CHART)
-    exe2, _ = build_simulator(Path(tmp) / "task2", TASK2_CHART)
     for test in (a2, a3, a4, a5, a6, a7, a8_a9_a13, a10, a11, a14, a15):
         test(exe)
-    a16(exe1)
-    a17(exe2)
     lines = [f"Version A headless KIELER simulation ({SYSTEM}) of {args.chart}, "
              f"{time.strftime('%Y-%m-%d %H:%M:%S %z')}",
              "KIELER messages: " + ("; ".join(warnings) if warnings else "none"), ""]

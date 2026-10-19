@@ -7,7 +7,7 @@ COMPSYS 303 - build the submission zip group_<N>.zip from the repository.
            -Draft (no .pof yet: packs the time-limited .sof, writes group_<N>_draft.zip)
 
 Included (repository-relative paths are kept inside the zip):
-  * the SCCharts: *_VersionA.sctx (root) and VersionB/*_VersionB.sctx
+  * the SCCharts: TrafficLight_VersionA.sctx (root) and VersionB/TrafficLight_VersionB.sctx
   * README.md
   * software/traffic_b and software/traffic_b_bsp sources, settings and Makefiles
     (no obj/, *.map, *.objdump, libhal_bsp.a; traffic_b.elf only with -IncludeElf)
@@ -44,8 +44,8 @@ $files = New-Object System.Collections.Generic.List[string]
 function Add-Files($items) { foreach ($i in $items) { if ($i -and (Rel $i.FullName) -notmatch $exclude) { $files.Add($i.FullName) } } }
 
 # Charts
-Add-Files (Get-ChildItem -Path $root -Filter "*_VersionA.sctx" -File)
-Add-Files (Get-ChildItem -Path (Join-Path $root "VersionB") -Filter "*_VersionB.sctx" -File)
+Add-Files (Get-ChildItem -Path $root -Filter "TrafficLight_VersionA.sctx" -File)
+Add-Files (Get-ChildItem -Path (Join-Path $root "VersionB") -Filter "TrafficLight_VersionB.sctx" -File)
 # README
 Add-Files (Get-Item (Join-Path $root "README.md"))
 # Nios II application and BSP

@@ -34,10 +34,8 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-# Every Version A chart and its Version B twin (Task 1, Task 2, Tasks 1-4 combined).
+# The submitted Version A chart and its Version B twin (Tasks 1-4 combined).
 PAIRS = [
-    (ROOT / "Task1_VersionA.sctx", ROOT / "VersionB" / "Task1_VersionB.sctx"),
-    (ROOT / "Task2_VersionA.sctx", ROOT / "VersionB" / "Task2_VersionB.sctx"),
     (ROOT / "TrafficLight_VersionA.sctx", ROOT / "VersionB" / "TrafficLight_VersionB.sctx"),
 ]
 

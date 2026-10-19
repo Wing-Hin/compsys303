@@ -8,8 +8,8 @@ checked by `check_board_log.py` (T0).
 
 | Item | Finding |
 |---|---|
-| 6th `.sctx` (`Task2_VersionB.sctx`) | Did not exist (only 5 project charts) although `main.c` offered `CHART 2` for it. **Created** as the Version B twin of `Task2_VersionA.sctx`; B2 proves the two identical apart from the timing, B9/B10 test and build it. 6 charts now: Task 1, Task 2 and Tasks 1-4 combined, each as Version A and Version B. |
-| Version A `.ktrace` traces, `check_ktrace.py` | Not found. Replaced by the headless KIELER simulation `versionA/run_versionA_sim.py` (A2-A17) with JSON traces. |
+| Stand-alone Task 1 / Task 2 charts | `Task1_VersionA/B.sctx` and `Task2_VersionA/B.sctx` were removed before submission (2026-10-19): Tasks 1-4 are submitted as one combined chart per version (`TrafficLight_VersionA.sctx`, `VersionB/TrafficLight_VersionB.sctx`). Their own tests (A16, A17, B9, B10) were dropped with them. |
+| Version A `.ktrace` traces, `check_ktrace.py` | Not found. Replaced by the headless KIELER simulation `versionA/run_versionA_sim.py` (A2-A11, A13-A15) with JSON traces. |
 
 ## T0 - log checker
 
@@ -21,11 +21,11 @@ checked by `check_board_log.py` (T0).
 
 `versionA/run_versionA_sim.py` builds KIELER's own netlist C simulator from each chart and drives it
 in Dynamic mode (results in `versionA/A_results.txt`, one JSON trace per test). **Strict** Dynamic mode
-(A8, A14-A16) ticks only on the chart's own wake-up (`sleepT`) or an input, exactly as KIELER does.
+(A8, A14, A15) ticks only on the chart's own wake-up (`sleepT`) or an input, exactly as KIELER does.
 
 | ID | P | Status | Evidence |
 |---|---|---|---|
-| A1 | M | PASS | KIELER CLI, netlist C and netlist simulation C systems, all 6 charts: 0 errors. Messages: "Instantaneous loop detected!" and, for clocks, "ValuedObject ...SD is contained in the model but not in VariableStore" (`cSD`, `wNSSD`, `wEWSD`, `cameraClockSD`). Both explained by `kieler_warning/` (B11): the warning comes from KIELER's expansion of clocks / during actions, not from a loop without a delayed transition. |
+| A1 | M | PASS | KIELER CLI, netlist C and netlist simulation C systems, both charts: 0 errors. Messages: "Instantaneous loop detected!" and, for clocks, "ValuedObject ...SD is contained in the model but not in VariableStore" (`cSD`, `wNSSD`, `wEWSD`, `cameraClockSD`). Both explained by `kieler_warning/` (B11): the warning comes from KIELER's expansion of clocks / during actions, not from a loop without a delayed transition. |
 | A2 | M | PASS | Real-time Dynamic stepping, 2 cycles: 33,34,36,12,20,36 x2 at 6/2/0.5/6/2/0.5 s, errors +0.2..+0.6 ms (PC sleep jitter). Trace `trace_A2_task1_realtime.jsonl`. |
 | A3 | M | PASS | NS press in R-G -> next G-R 97 for 4.0 s, then 33. `trace_A3_ns_press_in_RG.jsonl`. |
 | A4 | M | PASS | EW press in G-R -> next R-G 140 for 4.0 s, then 12. `trace_A4_ew_press_in_GR.jsonl`. |
@@ -36,27 +36,23 @@ in Dynamic mode (results in `versionA/A_results.txt`, one JSON trace per test). 
 | A9 | M | PASS | `1,2,3` + LF in the hold: configRejected 0 -> 1, lights stay 36, nothing applied. Same trace. |
 | A10 | M | PASS | Car present at yellow -> 'Camera activated' at yellow start, 'Snapshot taken' exactly 1.0 s later; the activation tick requests sleepT = 1. `trace_A10_camera_snapshot.jsonl`. |
 | A11 | M | PASS | Car leaves 0.5 s after activation -> 'Vehicle left', no snapshot. `trace_A11_car_leaves_early.jsonl`. |
-| A12 | M | PASS | Commit `774e0a2` (Part 2, wording approved): `TrafficLight_VersionA.sctx` declares Claude (Tasks 1-2) and OpenAI Codex (Task 3 parser, Task 4 camera); `Task1/Task2_VersionA` declare Claude. Resolved by the group (2026-10-19): all design decisions were made by Harold and Lucas; `TASK3.md` now says so and credits Codex for the Task 3 code, documentation and tests only. |
+| A12 | M | PASS | Commit `774e0a2` (Part 2, wording approved): `TrafficLight_VersionA.sctx` declares Claude (Tasks 1-2) and OpenAI Codex (Task 3 parser, Task 4 camera). Resolved by the group (2026-10-19): all design decisions were made by Harold and Lucas; `TASK3.md` now says so and credits Codex for the Task 3 code, documentation and tests only. |
 | A13 | M | PASS | New: `6000,2000,0,...` (0 in a middle field, comma path) and `...,2000,0` (0 in the last field, LF path) in the hold: configRejected 1 -> 3, lights stay 36, nothing applied. Same trace as A8. |
 | A14 | M | PASS | New (computational effort): Task 1, 10 cycles (170 s), strict Dynamic mode: **61 reactions** for 60 LEDR changes = 6.1 per 17 s cycle, every phase exact. Version B at 10 ms computes 2,050-2,200 reactions per second, about 35,000-37,000 per cycle (`B_summary.md`). `trace_A14_ticks_task1.jsonl`. |
 | A15 | M | PASS | New: Task 4, about 2 cycles with a car and a snapshot, strict Dynamic mode: **19 reactions** (4 of them the button pulses); snapshot 1.0 s after activation. Two independent clocks; a tick only when one of them expires or an input arrives. `trace_A15_ticks_task4.jsonl`. |
-| A16 | M | PASS | New: standalone `Task1_VersionA.sctx` (Part 1): 33,34,36,12,20,36 x2, durations exact, 13 reactions for 12 changes. `trace_A16_task1_chart.jsonl`. |
-| A17 | M | PASS | New: standalone `Task2_VersionA.sctx` (Part 1): NS press in R-G -> next G-R 97 for 4.0 s, then 33 for the remaining 2.0 s. `trace_A17_task2_chart.jsonl`. |
 
 ## B. Version B - static checks
 
 | ID | P | Status | Evidence |
 |---|---|---|---|
 | B1 | M | PASS | No `clock`, `float`, `deltaT`, `@ClocksUseSD` in code (comments excluded); 32 states, all 59 `go to` transitions (30 distinct targets) resolve. |
-| B2 | M | PASS | `diff_A_B.py` over **all three** A/B pairs (Task 1, Task 2, Tasks 1-4): every time constant equal (A s x 1000 = B ms); the normalised charts are identical. The only documented difference is the A-only camera wake-up block (`ArmedCheck` + `ArmedTick`, 6 lines) in the combined chart; the Task 3 conversion `/ MS_PER_S` (A only, packets are ms) is normalised. |
-| B3 | M | PASS | All 6 charts compiled with `de.cau.cs.kieler.sccharts.netlist`: exit 0; Version B charts give only "Instantaneous loop detected!" (from the during actions, B11). |
+| B2 | M | PASS | `diff_A_B.py` over the A/B pair (Tasks 1-4 combined): every time constant equal (A s x 1000 = B ms); the normalised charts are identical. The only documented difference is the A-only camera wake-up block (`ArmedCheck` + `ArmedTick`, 6 lines) in the combined chart; the Task 3 conversion `/ MS_PER_S` (A only, packets are ms) is normalised. |
+| B3 | M | PASS | Both charts compiled with `de.cau.cs.kieler.sccharts.netlist`: exit 0; Version B charts give only "Instantaneous loop detected!" (from the during actions, B11). |
 | B4 | M | PASS | All 11 `TickData` fields used by `main.c` exist (EWraised, LEDR, NSraised, cameraActivated, configChar, configReady, configValid, snapshotTaken, task, timerTick, vehicleButton); no `double`. |
 | B5 | M | PASS | `TrafficLight_B.c/.h` regenerated from the current chart (Task 3 in ms, 0 rejected, commit to `RRnExit`) and committed with it. The generated fallback of the new two-transition `RRnConfig` is correct (`_g84 && !_cg78`): the camera-style KIELER guard bug does not recur. |
 | B6 | M | PASS | `pc_test`: 600/200/50/600/200/50 events per phase. |
 | B7 | S | PASS | `main.c`: `CHART 4`, `TIMER_PERIOD_MS 10`; chart `TIMER_MS = 10`. |
 | B8 | S | PASS | `VersionB/nios/pc_suite.c`, output in `pc_suite_results.txt`: **30/30** cases pass (packets in ms; S13 now 7 invalid packets incl. two with a 0 field; S28: 1,000,000 random ticks, 537 LEDR changes, 92 commits, 70 rejects, 14 snapshots, 0 rule violations; **S30** (was the informational X1): 1,000,000 random ticks whose packets have 0 fields: 216 rejects, 34 commits, no 0 time-out applied, 0 rule violations). Mode-change rule used: activeTask changes only inside an all-red, i.e. on a tick that starts or ends with LEDR 36 (approved). |
-| B9 | S | PASS | New: `VersionB/nios/pc_task2.c`, output in `pc_task2_results.txt`: 7/7 cases on the generated `Task2_VersionB` code (600/200/50 cycle; NS / EW walk 400 events then 200; both; held button = one walk; press in own green; 300,000 ticks of presses, legal changes only). |
-| B10 | S | PASS | New: `main.c` with `CHART 2` + generated `Task2_PedestrianTrafficLight_B.c` built for the Nios II (scratch copy, real BSP): 0 errors, 0 warnings, text 82532 B. |
 | B11 | S | PASS | New: `kieler_warning/run_kieler_warning.py` -> `kieler_warning/results.txt`. A delayed loop compiles silently (W1); the same loop with a during counter (W2, Version B style) or a clock (W3, Version A style) gives exactly "Instantaneous loop detected!" and still generates code; an all-immediate loop (W4) gives the warning **plus** "The SCG is NOT asc-schedulable!" and no code. All 6 controller charts behave like W2/W3. |
 
 ### Finding (fixed): 0-second time-outs (was X1)
@@ -127,8 +123,8 @@ marked by `#` lines; T0: 237 phases, 0 violations).
 | D4 | PASS | `git clone` of commit `774e0a2` into `%TEMP%\cs303_fresh`; Nios II command-line tools only: `nios2-bsp-generate-files --settings=settings.bsp --bsp-dir=.`, `make` (BSP), `make` (traffic_b): 0 errors, 0 warnings, **no manual edits**. Current build (Task 3 in ms): 0 warnings, text 91988, data 7388, bss 388. The Quartus hardware rebuild needs `qsys-generate` first (generated `nios2_system/` HDL is not tracked) - part of D1. |
 | D5 | PASS | `B_D5_fresh_clone.txt`: the fresh-clone ELF ran Task 1 (switches 0x00000): 22 phases at 600/200/50 events, within 0.4 ms; T0 clean. |
 | D6 | PASS | Top-level `README.md`: how the task and the timing version are selected, SW1..0 = task, KEY0/KEY1/KEY2, KEY3 = reset, LEDR bits, RS-232 115200 8N1 + JTAG console, Task 3 packet format (ms, 0 invalid), "Version A = simulator, Version B = board", known limitations, group members' full names and UPIs. |
-| D7 | PASS | AI Use Declaration in all 6 charts, both `main.c` (identical), `pc_test.c`, `pc_suite.c`, `pc_suite_print.h`, `pc_task2.c`, `analyse_logs.py`, `check_board_log.py`, `diff_A_B.py`, `run_versionA_sim.py`, `run_kieler_warning.py`, `board_test.v`, `COMPSYS303_Lab1_diag.v`. The KIELER-generated `.c/.h` carry none (regenerated files). |
-| D8 | PENDING | `VersionB/make_submission.ps1 -Group 14 -DryRun` lists the package (6 charts; traffic_b + traffic_b_bsp without obj/; sopcinfo; README; evidence incl. figures, versionA/, kieler_warning/). Fails loudly until the `.pof` exists. |
+| D7 | PASS | AI Use Declaration in both charts, both `main.c` (identical), `pc_test.c`, `pc_suite.c`, `pc_suite_print.h`, `analyse_logs.py`, `check_board_log.py`, `diff_A_B.py`, `run_versionA_sim.py`, `run_kieler_warning.py`, `board_test.v`, `COMPSYS303_Lab1_diag.v`. The KIELER-generated `.c/.h` carry none (regenerated files). |
+| D8 | PENDING | `VersionB/make_submission.ps1 -Group 14 -DryRun` lists the package (2 charts; traffic_b + traffic_b_bsp without obj/; sopcinfo; README; evidence incl. figures, versionA/, kieler_warning/). Fails loudly until the `.pof` exists. |
 | D9 | PASS | Dry-run list contains no `db/`, `incremental_db/`, `.metadata/`, `obj/`, `Hello_lab1*`, `_to_delete/`, board_test outputs or `TASK3_EDGE_RESULTS.md`. |
 | D10 | PENDING | Report (group). `report_facts.md` has every number with its source. |
 | D11 | PENDING | Group. |
