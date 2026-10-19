@@ -1,0 +1,22 @@
+{
+	"system" : {
+		"platform" : "windows64",
+		"os_name" : "Windows 10",
+		"os_version" : "10.0"
+	},
+	"error" : {
+		"executable" : "quartus_cpf",
+		"comment" : "not_applicable",
+		"error_message" : "chain.size() == 1",
+		"source_file" : "/quartus/pgm/qpgm/qcpg_cmd.cpp",
+		"line" : "3902",
+		"stack_trace" : "\t0x7ff6f3bb1bec: quartus_cpf + 0x21bec (?create_pof_file@QCPG_FRAMEWORK@@QEAA_NXZ + 0x38c)\n\t0x7ff6f3bb4da3: quartus_cpf + 0x24da3 (?execute@QCPG_FRAMEWORK@@UEAA_NXZ + 0xa83)\n\t0x7ffa862412bc: comp_qexe + 0x112bc (qexe_do_normal + 0x1ec)\n\t0x7ffa86246142: comp_qexe + 0x16142 (qexe_run + 0x432)\n\t0x7ffa86246e51: comp_qexe + 0x16e51 (?qexe_standard_main@@YAHPEAVQEXE_FRAMEWORK@@PEAPEBUQEXE_OPTION_DEFINITION@@HPEAPEBD@Z + 0xc1)\n\t0x7ff6f3bbc78c: quartus_cpf + 0x2c78c (?qcpg_main@@YAHHPEAPEBD@Z + 0x7c)\n\t0x7ffa927b2e98: CCL_MSG + 0x12e98 (?msg_main_thread@@YAPEAXPEAX@Z + 0x18)\n\t0x7ffa927b467e: CCL_MSG + 0x1467e (?msg_thread_wrapper@@YAPEAXP6APEAXPEAX@Z0@Z + 0x6e)\n\t0x7ffaaaf66660: ccl_mem + 0x16660 (?mem_thread_wrapper@@YAPEAXP6APEAXPEAX@Z0@Z + 0x70)\n\t0x7ffa927b2761: CCL_MSG + 0x12761 (?msg_exe_main@@YAHHPEAPEBDP6AHH0@Z@Z + 0xa1)\n\t0x7ff6f3bc4cce: quartus_cpf + 0x34cce (__tmainCRTStartup + 0x10e)\n\t0x7ffabfecdda6: KERNEL32 + 0x2dda6 (BaseThreadInitThunk + 0x16)\n\t0x7ffac125ee4b: ntdll + 0x7ee4b (RtlUserThreadStart + 0x2b)\n",
+		"subsystem" : "QPGM"
+	},
+	"quartus" : {
+		"quartus_bits" : "64",
+		"version" : "18.1.0",
+		"build" : "625",
+		"edition" : "Lite Edition"
+	}
+}
